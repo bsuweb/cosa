@@ -46,6 +46,7 @@ def crawl(bsu_urls, queue, shelf)
 
   #Need to test this more
   queue.all.each do |row|
+  puts row
 
     if row[:force] == true
       crawlUrl(row[:id], bsu_urls, queue)
@@ -80,9 +81,9 @@ end
 # queue    - crawler_queue table
 #
 def crawlUrl(queue_id, bsu_urls, queue)
-  db = Sequel.sqlite('data/webcrawler.db')
+  db = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
 
-  bsu_links = db[:crawler_bsu_links]
+  bsu_links = db[:bsu_links]
 
   item = queue[:id => queue_id]
   url = item[:url]
@@ -91,7 +92,7 @@ def crawlUrl(queue_id, bsu_urls, queue)
   type_array = []
   etag = ''
   #temp
-  domain = "www.optivation.org"
+  domain = "www.bemidjistate.edu"
 
   if url.include?(domain)
     #url is internal, url = url..
@@ -106,7 +107,7 @@ def crawlUrl(queue_id, bsu_urls, queue)
   end
 
 
-  response = Typhoeus::Request.get(url, :timeout => 100)
+  response = Typhoeus::Request.get(url, :timeout => 5000)
 
   content_type = response.headers_hash["Content-Type"]
   if content_type.include?(';')
@@ -158,9 +159,8 @@ def crawlUrl(queue_id, bsu_urls, queue)
         bsu_links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
       end
 
-      results = difference(old_links, parsed_links)
-      new_links = results[0]
-      deleted_links = results[1]
+      new_links = parsed_links - old_links
+      deleted_links = old_links - parsed_links
 
       deleted_links.each do |link|
         bsu_links.where('to_url = ?', link).delete
@@ -197,17 +197,17 @@ def crawlUrl(queue_id, bsu_urls, queue)
 
   rec = bsu_urls.where(:url => url)
 
-  puts "queue_id: #{ queue_id }"
-  # item: #{ item }
-  puts "url: #{ url }"
-  # last accessed: #{ last_accessed }
-  # content type: #{ content_type }
-  # status: #{ status }"
+  puts "queue_id: #{ queue_id }
+  item: #{ item }
+  url: #{ url }
+  last accessed: #{ last_accessed }
+  content type: #{ content_type }
+  status: #{ status }"
 
     if bsu_urls[:url => url]
       rec.update(:accessed => last_accessed, :response => body) #UPDATE
     else
-      bsu_urls.insert([url, last_accessed, content_type, 1, status, '', body, valid[1], valid[0]]) #INSERT
+      bsu_urls.insert([url, last_accessed, content_type, 1, status, body, valid[1], valid[0]]) #INSERT
   end
 
 
@@ -244,29 +244,12 @@ def removeLeading(links_array)
   return links_array
 end
 
-# Public: Returns the difference of two arrays
-#
-# old_array - The original array of items
-# new_array - The new array of items
-#
-# Example
-#
-#   difference([1,2,3], [3,4,5])
-#   # => [ [4,5],[1,2] ]
-#
-def difference(old_array, new_array)
-  new_items = new_array - old_array
-  removed_items = old_array - new_array
-
-  return [new_items, removed_items]
-end
-
 #Database Connection
 # DB = Sequel.sqlite('data/webcrawler.db')
 # DB = Sequel.connect('sqlite://data/webcrawler.db')
-DB = Sequel.connect('sqlite:///Users/matt/Documents/crawler-prototypes/lib/data/webcrawler.db')
-queue = DB[:crawler_queue]
-bsu_urls = DB[:crawler_bsu_urls]
+DB = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
+queue = DB[:queue]
+bsu_urls = DB[:bsu_urls]
 
 if ARGV[0] == nil
   options = {}
@@ -276,7 +259,7 @@ end
 
 
 #1 Day
-SHELF_LIFE = 86400
+SHELF_LIFE = 1#86400
 
 while true
   puts "call seed"
