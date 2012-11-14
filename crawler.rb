@@ -2,112 +2,76 @@ require 'rubygems'
 require 'nokogiri'
 require 'typhoeus'
 require 'sequel'
+require 'yaml'
 require './lib/valid'
 
-# Public: For each row in crawler_<site>_urls, see if the row has been
-# accessed within the seed time. If it has not, add that url to the queue with
-# the pattern set to '' and force set to 0.
-#
-# bsu_urls  - crawler_bsu_urls table
-# queue     - crawler_queue table
-# shelf     - Alias for SHELF_LIFE constant
-#
-def seed(bsu_urls, queue, shelf, options={})
-  defaults = {
-    domain: "www.bemidjistate.edu/",
-    start_path: '/',
-    pattern: '',
-    force: 0
-  }
-  options = defaults.merge(options)
+class Crawler
+	attr_accessor :db, :bsu_urls, :bsu_links, :queue, :SHELF, :domain
 
-  bsu_urls.each do |row|
-    if Time.parse(row[:accessed]) < Time.now - shelf || options[:force].to_i == 1
-      puts "adding to queue"
-      DB.transaction do #BEGIN
-        queue.insert(:url => row[:url], :pattern => '', :force => options[:force]) #INSERT
-      end #COMMIT
-    end
+	def initialize()
+    # Load configuration file
+    #config = YAML::load( File.open( 'config') )
+
+		@db = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
+		@bsu_urls = db[:bsu_urls]
+		@bsu_links = db[:bsu_links]
+		@queue = db[:queue]
+		@SHELF = 1#86400
+    #temp
+    @domain = "www.bemidjistate.edu"
+	end
+
+  def set_args()
+    #TODO
   end
-  crawl(bsu_urls, queue, shelf)
+
 end
 
-
-# Public: For each row in crawler_queue, check to see if the force option is
-# on. If it is, crawl the url. Else if the url has not been crawled, crawl it.
-# Else if the url has been crawled AND Time.now - Time last accessed is > the
-# SHELF_TIME crawl the url. Then remove the row/url from the queue.
-#
-# bsu_urls  - crawler_bsu_urls table
-# queue     - crawler_queue table
-# shelf     - Alias for the SHELF_LIFE constant
-#
-def crawl(bsu_urls, queue, shelf)
-
-  #Need to test this more
-  queue.all.each do |row|
-  puts row
-
-    if row[:force] == true
-      crawlUrl(row[:id], bsu_urls, queue)
-    elsif !bsu_urls[:url => row[:url]]
-      crawlUrl(row[:id], bsu_urls, queue)
-    #Rewrite this so its more readable
-    elsif bsu_urls[:url => row[:url]] && Time.now - Time.parse(bsu_urls.where(:url => row[:url]).get(:accessed)) > shelf
-      crawlUrl(row[:id], bsu_urls, queue)
-    end
-
-    queue.where(:id => row[:id]).delete
-
-  end
+def seed(crawler)
+	crawler.bsu_urls.each do |row|
+		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
+			puts "Adding to queue"
+      insert_data(crawler, crawler.queue, [row[:url], '', 0])
+		end
+	end
+  crawl_queue(crawler)
 end
 
+def crawl_queue(crawler)
+  row = crawler.queue.first
 
-# Public: Get an item from the queue(queue_id) and store/update the url,
-# accessed, content-type, content-length, etag, status, response, validation-
-# type, and valid in the database.
-#
-# If the validation type is HTML, get all rows in the links table where the url
-# == the current url, and set parsed_links to all of the links in the body of
-# the page. For each difference(deleted links) between old_links and
-# parsed_links, remove link from the links table. For each difference(new links
-# )between old_links and parsed_links add link to links table. If the link is
-# not in the urls table, if item.pattern = NULL then add it to the queue, else
-# if item.patter !NULL && link matches item.pattern add it to the queue using
-# same pattern and force values.
-#
-# queue_id - The id of the page to be crawled
-# bsu_urls - crawler_bsu_urls table
-# queue    - crawler_queue table
-#
-def crawlUrl(queue_id, bsu_urls, queue)
-  db = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
+  if row[:force] == true
+    crawl_url(row[:id], crawler)
+  elsif !crawler.bsu_urls[:url => row[:url]]
+    crawl_url(row[:id], crawler)
+  elsif crawler.bsu_urls[:url => row[:url]] && Time.now - Time.parse(crawler.bsu_urls.where(:url => row[:url]).get(:accessed)) > crawler.SHELF
+    crawl_url(row[:id], crawler)
+  end
+  crawler.queue.where(:id => row[:id]).delete
 
-  bsu_links = db[:bsu_links]
+end
 
-  item = queue[:id => queue_id]
+def crawl_url(queue_id, crawler)
+
+  item = crawler.queue[:id => queue_id]
   url = item[:url]
   last_accessed = Time.now
   parsed_links = []
   type_array = []
-  etag = ''
-  #temp
-  domain = "www.bemidjistate.edu"
 
-  if url.include?(domain)
-    #url is internal, url = url..
+  if url.include?(crawler.domain)
+    #url is internal, url = url
   elsif url[0] == '/' || url[0,2] == '../'
     #url is internal
-    url = domain + url
+    url = crawler.domain + url
   elsif url.include?('http')
     #url is external, url = url
     internal = false
   else
-    url = domain + '/' + url
+    url = crawler.domain + '/' + url
   end
 
-
-  response = Typhoeus::Request.get(url, :timeout => 5000)
+  response = Typhoeus::Request.get(url, :timeout => 30000)
 
   content_type = response.headers_hash["Content-Type"]
   if content_type.include?(';')
@@ -122,67 +86,63 @@ def crawlUrl(queue_id, bsu_urls, queue)
     valid = [0, 0]
   else
     valid = valid?(url, content_type)
-    # valid = [1, 1]
+    #valid = [1, 1]
   end
 
   if valid[1] == "html"
-    if url.include?(domain)
+    if url.include?(crawler.domain)
 
       Nokogiri::HTML(body).css('a', 'link', 'img', 'video', 'audio', 'script', 'object').each do |item|
-        #Ugly, rewrite
-        if !item[:href].nil? && item[:href]
+        if item[:href]
           if item[:href] != "#" && !item[:href].include?('mailto:')
             parsed_links << item[:href]
-            type_array << [item[:href], item.name]
+            type_array << item[:href]
           end
-        elsif !item[:src].nil? && item[:src]
+        elsif item[:src]
           parsed_links << item[:src]
-          type_array << [item[:src], item.name]
+          type_array << item[:src]
         end
       end
 
-      type_array.each { |array| array = removeLeading(array) }
+      #type_array.each { |array| array = removeLeading(array) }
+      type_array = removeLeading(type_array)
       parsed_links = removeLeading(parsed_links)
       parsed_links.uniq!
 
-      if bsu_links.where('from_url = ?', url).empty?
+      if crawler.bsu_links.where('from_url = ?', url).empty?
 
         parsed_links.each do |link|
-          puts link
-          # type = determineType(link, type_array) type[1]
-          bsu_links.insert(:from_url => url, :to_url => link, :type => 1) #INSERT
+          #type = determineType(link, type_array) type[1]
+          insert_data(crawler, crawler.bsu_links, [url, link, 1])
         end
 
         old_links = []
       else
         old_links = []
-        bsu_links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
+        crawler.bsu_links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
       end
 
       new_links = parsed_links - old_links
       deleted_links = old_links - parsed_links
 
       deleted_links.each do |link|
-        bsu_links.where('to_url = ?', link).delete
+        crawler.bsu_links.where('to_url = ?', link).delete
       end
 
       new_links = removeLeading(new_links)
-      DB.transaction do #BEGIN
-        new_links.each do |link|
-          # type = determineType(link, type_array) type[1]
+      new_links.each do |link|
+        #type = determineType(link, type_array) type[1]
 
-          unless bsu_links.where(:from_url => url, :to_url => link)
-            bsu_links.insert(:from_url => url, :to_url => link, :type => 1)
+        unless crawler.bsu_links.where(:from_url => url, :to_url => link)
+          insert_data(crawler, crawler.bsu_links, [url, link, 1])
+        end
+
+        if item[:pattern] == ''
+          unless crawler.queue[:url => link]
+            insert_data(crawler, crawler.queue, [link, '', 0])
           end
-
-            if item[:pattern] == ''
-              unless queue[:url => link]
-                queue.insert(:url => link, :pattern => '', :force => 0) #INSERT
-              end
-            elsif item[:pattern] != '' && link == item[:pattern]
-              queue.insert(:url => link, :pattern => item[:pattern], :force => item[:force]) #INSERT
-            end
-
+        elsif item[:pattern] != '' && link == item[:pattern]
+          insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]])
         end
       end
     end
@@ -195,44 +155,24 @@ def crawlUrl(queue_id, bsu_urls, queue)
     body = ''
   end
 
-  rec = bsu_urls.where(:url => url)
+  rec = crawler.bsu_urls.where(:url => url)
 
   puts "queue_id: #{ queue_id }
   item: #{ item }
   url: #{ url }
-  last accessed: #{ last_accessed }
+  last_accessed: #{ last_accessed }
   content type: #{ content_type }
   status: #{ status }"
 
-    if bsu_urls[:url => url]
-      rec.update(:accessed => last_accessed, :response => body) #UPDATE
-    else
-      bsu_urls.insert([url, last_accessed, content_type, 1, status, body, valid[1], valid[0]]) #INSERT
+  if crawler.bsu_urls[:url => url]
+    rec.update(:accessed => last_accessed, :response => body)
+  else
+    insert_data(crawler, crawler.bsu_urls, [url, last_accessed, content_type, 1, status, body, valid[1], valid[0]])
   end
 
 
 end
 
-# Public: Determines the type of a link based on its HTML tag.
-#
-# link - The link to be tested
-# type_array - Array with the links, and their tag
-#
-def determineType(link, type_array)
-  type = type_array.assoc(link)
-  type[1] = 'css' if type[1] === 'link'
-  return type[1]
-end
-
-# Public: Removes the leading '/' or '../' from links in an array
-#
-# links_array - The original array of links
-#
-# Example
-#
-#   removeLeading(['/page1.html', '../page2.html', 'page3.html'])
-#   # => ['page1.html', 'page2.html', 'page3.html']
-#
 def removeLeading(links_array)
   links_array.each do |link|
     if link[0] === '/'
@@ -244,29 +184,38 @@ def removeLeading(links_array)
   return links_array
 end
 
-#Database Connection
-# DB = Sequel.sqlite('data/webcrawler.db')
-# DB = Sequel.connect('sqlite://data/webcrawler.db')
-DB = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
-queue = DB[:queue]
-bsu_urls = DB[:bsu_urls]
+def insert_data(crawler, table, value)
+  queue = [:url, :pattern, :force]
+  links = [:from_url, :to_url, :type]
+  urls = [:url, :accessed, :content_type, :content_length, :status, :response, :validation_type, :valid]
 
-if ARGV[0] == nil
-  options = {}
-else
-  options = { domain: ARGV.shift, start_path: ARGV.shift, pattern: ARGV.shift, force: ARGV.shift }
+  data_hash = {}
+
+  if table == crawler.queue
+    queue.each_with_index { |k,i| data_hash[k] = value[i]}
+  elsif table == crawler.bsu_links
+    links.each_with_index { |k,i| data_hash[k] = value[i]}
+  elsif table == crawler.bsu_urls
+    urls.each_with_index { |k,i| data_hash[k] = value[i]}
+  end
+
+  crawler.db.transaction do
+    table.insert(data_hash)
+  end
 end
 
+crawler = Crawler.new()
 
-#1 Day
-SHELF_LIFE = 1#86400
 
 while true
   puts "call seed"
-  seed(bsu_urls, queue, SHELF_LIFE, options)
+  seed(crawler)
 
-  if queue.empty?
+  if crawler.queue.empty?
     puts "queue empty"
     break
   end
 end
+
+
+
