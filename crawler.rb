@@ -27,16 +27,27 @@ class Crawler
 
 end
 
+#For each page in the urls table, see if the page has been
+#accessed within the seed time. If it has not,add that url to the
+#queue with the pattern set to '' and force set to 0.
+#
+# crawler - Crawler object
+#
 def seed(crawler)
 	crawler.bsu_urls.each do |row|
 		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
-			puts "Adding to queue"
       insert_data(crawler, crawler.queue, [row[:url], '', 0])
 		end
 	end
   crawl_queue(crawler)
 end
 
+#Get the first row in the queue and check to see if either the force flag is
+#on, or if the url has not been added to the urls table, or if it has been
+#added to the urls table AND the url has not been accessed within the seed time
+#
+# crawler - Crawler object
+#
 def crawl_queue(crawler)
   row = crawler.queue.first
 
@@ -173,6 +184,15 @@ def crawl_url(queue_id, crawler)
 
 end
 
+#Removes the leading '/' or '../' from the links in an array
+#
+# links_array - The original array of links
+#
+# Example
+#
+#   removeLeading(['/page1.html', '../page2.html', 'page3.html'])
+#   # => ['page1.html', 'page2.html', 'page3.html']
+#
 def removeLeading(links_array)
   links_array.each do |link|
     if link[0] === '/'
@@ -184,7 +204,15 @@ def removeLeading(links_array)
   return links_array
 end
 
-def insert_data(crawler, table, value)
+#Combines the array of given 'values' with an array of 'keys' based on the
+#table you wish to insert data to. The key and value arrays are combined into
+#a hash object and the data is inserted into the correct table.
+#
+# crawler - Crawler object
+# table   - Table to insert data
+# values   - Values to be inserted into table
+#
+def insert_data(crawler, table, values)
   queue = [:url, :pattern, :force]
   links = [:from_url, :to_url, :type]
   urls = [:url, :accessed, :content_type, :content_length, :status, :response, :validation_type, :valid]
@@ -192,11 +220,11 @@ def insert_data(crawler, table, value)
   data_hash = {}
 
   if table == crawler.queue
-    queue.each_with_index { |k,i| data_hash[k] = value[i]}
+    queue.each_with_index { |k,i| data_hash[k] = values[i]}
   elsif table == crawler.bsu_links
-    links.each_with_index { |k,i| data_hash[k] = value[i]}
+    links.each_with_index { |k,i| data_hash[k] = values[i]}
   elsif table == crawler.bsu_urls
-    urls.each_with_index { |k,i| data_hash[k] = value[i]}
+    urls.each_with_index { |k,i| data_hash[k] = values[i]}
   end
 
   crawler.db.transaction do
@@ -205,11 +233,10 @@ def insert_data(crawler, table, value)
 end
 
 crawler = Crawler.new()
-
+seed(crawler)
 
 while true
-  puts "call seed"
-  seed(crawler)
+  crawl_queue(crawler)
 
   if crawler.queue.empty?
     puts "queue empty"
