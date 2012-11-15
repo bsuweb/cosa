@@ -10,15 +10,15 @@ class Crawler
 
 	def initialize()
     # Load configuration file
-    #config = YAML::load( File.open( 'config') )
+    # Used to load the base domain to be crawled, and the path to the database
+    config = YAML::load( File.open( 'config') )
 
-		@db = Sequel.connect('sqlite:///Users/matt/Documents/crawler/data/webcrawler.db')
+		@db = Sequel.connect(config['db_path'])
 		@bsu_urls = db[:bsu_urls]
 		@bsu_links = db[:bsu_links]
 		@queue = db[:queue]
 		@SHELF = 1#86400
-    #temp
-    @domain = "www.bemidjistate.edu"
+    @domain = config['domain']
 	end
 
   def set_args()
@@ -220,11 +220,11 @@ def insert_data(crawler, table, values)
   data_hash = {}
 
   if table == crawler.queue
-    queue.each_with_index { |k,i| data_hash[k] = values[i]}
+    queue.each_with_index { |k,i| data_hash[k] = values[i] }
   elsif table == crawler.bsu_links
-    links.each_with_index { |k,i| data_hash[k] = values[i]}
+    links.each_with_index { |k,i| data_hash[k] = values[i] }
   elsif table == crawler.bsu_urls
-    urls.each_with_index { |k,i| data_hash[k] = values[i]}
+    urls.each_with_index { |k,i| data_hash[k] = values[i] }
   end
 
   crawler.db.transaction do
