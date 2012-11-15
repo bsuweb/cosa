@@ -49,8 +49,14 @@ end
 # crawler - Crawler object
 #
 def crawl_queue(crawler)
+  # Create a Sequel object that corresponds to the first item in the queue
+  # table. 'row' gets that value.
   row = crawler.queue.first
 
+  # If the force column in the sequel object is set to true crawl the page.
+  # Elsif the url of the sequel object is not in the urls table crawl the page.
+  # Elsif the sequel object is in the urls table, but has not been accessed
+  # within the shelf time crawl the page.
   if row[:force] == true
     crawl_url(row[:id], crawler)
   elsif !crawler.bsu_urls[:url => row[:url]]
@@ -58,6 +64,7 @@ def crawl_queue(crawler)
   elsif crawler.bsu_urls[:url => row[:url]] && Time.now - Time.parse(crawler.bsu_urls.where(:url => row[:url]).get(:accessed)) > crawler.SHELF
     crawl_url(row[:id], crawler)
   end
+  # Delete the sequel object from the queue table.
   crawler.queue.where(:id => row[:id]).delete
 
 end
@@ -103,15 +110,24 @@ def crawl_url(queue_id, crawler)
   if valid[1] == "html"
     if url.include?(crawler.domain)
 
+      # Iterate through the a, link, img, video, audio, script, and object elements on the page.
       Nokogiri::HTML(body).css('a', 'link', 'img', 'video', 'audio', 'script', 'object').each do |item|
+
+        # If element contains an href attribute, and that is not set to '#' or
+        # 'mailto:', add that element to the parsed_links array. Also add that
+        # element and it's 'tag' to the type_array array.
         if item[:href]
           if item[:href] != "#" && !item[:href].include?('mailto:')
             parsed_links << item[:href]
-            type_array << item[:href]
+            type_array << [item[:href], item.name]
           end
+
+        # Else if the element contains an scr attribute, add it to the
+        # parsed_links array. Also add that element and it's 'tag' to the
+        # type_array array.
         elsif item[:src]
           parsed_links << item[:src]
-          type_array << item[:src]
+          type_array << [item[:src], item.name]
         end
       end
 
@@ -120,19 +136,29 @@ def crawl_url(queue_id, crawler)
       parsed_links = removeLeading(parsed_links)
       parsed_links.uniq!
 
+      # If the entry for the current url in the links table is empty, add each
+      # item from the parsed_links array to the links table with the format
+      # :from_url => current_url, :to_url => parsed_links_item, :type => type
       if crawler.bsu_links.where('from_url = ?', url).empty?
 
         parsed_links.each do |link|
-          #type = determineType(link, type_array) type[1]
+         # type = determine_type(link, type_array)
           insert_data(crawler, crawler.bsu_links, [url, link, 1])
         end
 
+        # Create old_links array. Since this page had no links in the table
+        # previously, the old_links array is empty.
         old_links = []
       else
+
+        # Elsif the entry for the current url in the links table is not empty,
+        # add each of those links to the old_links array.
         old_links = []
         crawler.bsu_links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
       end
 
+      # Find the differences between old_links and parsed_links to determine if
+      # any links have been added or removed from the page.
       new_links = parsed_links - old_links
       deleted_links = old_links - parsed_links
 
@@ -142,16 +168,23 @@ def crawl_url(queue_id, crawler)
 
       new_links = removeLeading(new_links)
       new_links.each do |link|
-        #type = determineType(link, type_array) type[1]
+       # type = determine_type(link, type_array)
 
+       # If this item in the new_links array is not in the links table, add it
+       # to the links table. MAY BE REDUNDANT
         unless crawler.bsu_links.where(:from_url => url, :to_url => link)
           insert_data(crawler, crawler.bsu_links, [url, link, 1])
         end
 
+        # If the current url's pattern field is blank, add this item from
+        # new_links to the queue with a blank pattern and a force value of 0.
         if item[:pattern] == ''
           unless crawler.queue[:url => link]
             insert_data(crawler, crawler.queue, [link, '', 0])
           end
+
+        # Elsif the pattern is not blank and 'link' matches the pattern, add
+        # link to the queue with the same pattern and force value.
         elsif item[:pattern] != '' && link == item[:pattern]
           insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]])
         end
@@ -182,6 +215,17 @@ def crawl_url(queue_id, crawler)
   end
 
 
+end
+
+#Determines the type of a link based on its 'tag'
+#
+# link - The link to be tested
+# type_array - Array with the links, and their tag
+#
+def determine_type(link, type_array)
+  type = type_array.assoc(link)
+  type[1] = 'css' if type[1] === 'link'
+  return type[1]
 end
 
 #Removes the leading '/' or '../' from the links in an array
@@ -219,6 +263,11 @@ def insert_data(crawler, table, values)
 
   data_hash = {}
 
+  # Checks to see which table is being accessed and then creates the hash to
+  # added to the table. Does this by taking the first item from the table
+  # array(queue, links, or urls) and sets it as the key in the data_hash
+  # Hash object. That key is given the value of values[i]. i, and k are
+  # incremented and the process repeats itself.
   if table == crawler.queue
     queue.each_with_index { |k,i| data_hash[k] = values[i] }
   elsif table == crawler.bsu_links
