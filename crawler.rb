@@ -11,7 +11,7 @@ class Crawler
 	def initialize()
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
-    config = YAML::load( File.open( 'config') )
+    config = YAML::load( File.open( 'config.yaml') )
 
 		@db = Sequel.connect(config['db_path'])
 		@urls = db[:urls]
@@ -67,6 +67,10 @@ def crawl_queue(crawler)
   # Delete the sequel object from the queue table.
   crawler.queue.where(:id => row[:id]).delete
 
+  unless crawler.queue.empty?
+    crawl_queue(crawler)
+  end
+
 end
 
 def crawl_url(queue_id, crawler)
@@ -75,6 +79,7 @@ def crawl_url(queue_id, crawler)
   url = item[:url]
   last_accessed = Time.now
   parsed_links = []
+  old_links = []
   type_array = []
 
   if url.include?(crawler.domain)
@@ -131,9 +136,9 @@ def crawl_url(queue_id, crawler)
         end
       end
 
-      #type_array.each { |array| array = removeLeading(array) }
-      type_array = removeLeading(type_array)
-      parsed_links = removeLeading(parsed_links)
+      #type_array.each { |array| array = remove_leading(array) }
+      type_array = remove_leading(type_array)
+      parsed_links = remove_leading(parsed_links)
       parsed_links.uniq!
 
       # If the entry for the current url in the links table is empty, add each
@@ -148,12 +153,10 @@ def crawl_url(queue_id, crawler)
 
         # Create old_links array. Since this page had no links in the table
         # previously, the old_links array is empty.
-        old_links = []
       else
 
-        # Elsif the entry for the current url in the links table is not empty,
-        # add each of those links to the old_links array.
-        old_links = []
+        # Else the entry for the current url in the links table is not empty.
+        # Add each of those links to the old_links array.
         crawler.links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
       end
 
@@ -166,7 +169,7 @@ def crawl_url(queue_id, crawler)
         crawler.links.where('to_url = ?', link).delete
       end
 
-      new_links = removeLeading(new_links)
+      new_links = remove_leading(new_links)
       new_links.each do |link|
        # type = determine_type(link, type_array)
 
@@ -237,7 +240,7 @@ end
 #   removeLeading(['/page1.html', '../page2.html', 'page3.html'])
 #   # => ['page1.html', 'page2.html', 'page3.html']
 #
-def removeLeading(links_array)
+def remove_leading(links_array)
   links_array.each do |link|
     if link[0] === '/'
       link.replace(link[1,link.length])
@@ -283,15 +286,3 @@ end
 
 crawler = Crawler.new()
 seed(crawler)
-
-while true
-  crawl_queue(crawler)
-
-  if crawler.queue.empty?
-    puts "queue empty"
-    break
-  end
-end
-
-
-
