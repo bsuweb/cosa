@@ -6,7 +6,7 @@ require 'yaml'
 require './lib/valid'
 
 class Crawler
-	attr_accessor :db, :bsu_urls, :bsu_links, :queue, :SHELF, :domain
+	attr_accessor :db, :urls, :links, :queue, :SHELF, :domain
 
 	def initialize()
     # Load configuration file
@@ -14,8 +14,8 @@ class Crawler
     config = YAML::load( File.open( 'config') )
 
 		@db = Sequel.connect(config['db_path'])
-		@bsu_urls = db[:bsu_urls]
-		@bsu_links = db[:bsu_links]
+		@urls = db[:urls]
+		@links = db[:links]
 		@queue = db[:queue]
 		@SHELF = 1#86400
     @domain = config['domain']
@@ -34,7 +34,7 @@ end
 # crawler - Crawler object
 #
 def seed(crawler)
-	crawler.bsu_urls.each do |row|
+	crawler.urls.each do |row|
 		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
       insert_data(crawler, crawler.queue, [row[:url], '', 0])
 		end
@@ -59,9 +59,9 @@ def crawl_queue(crawler)
   # within the shelf time crawl the page.
   if row[:force] == true
     crawl_url(row[:id], crawler)
-  elsif !crawler.bsu_urls[:url => row[:url]]
+  elsif !crawler.urls[:url => row[:url]]
     crawl_url(row[:id], crawler)
-  elsif crawler.bsu_urls[:url => row[:url]] && Time.now - Time.parse(crawler.bsu_urls.where(:url => row[:url]).get(:accessed)) > crawler.SHELF
+  elsif crawler.urls[:url => row[:url]] && Time.now - Time.parse(crawler.urls.where(:url => row[:url]).get(:accessed)) > crawler.SHELF
     crawl_url(row[:id], crawler)
   end
   # Delete the sequel object from the queue table.
@@ -139,11 +139,11 @@ def crawl_url(queue_id, crawler)
       # If the entry for the current url in the links table is empty, add each
       # item from the parsed_links array to the links table with the format
       # :from_url => current_url, :to_url => parsed_links_item, :type => type
-      if crawler.bsu_links.where('from_url = ?', url).empty?
+      if crawler.links.where('from_url = ?', url).empty?
 
         parsed_links.each do |link|
          # type = determine_type(link, type_array)
-          insert_data(crawler, crawler.bsu_links, [url, link, 1])
+          insert_data(crawler, crawler.links, [url, link, 1])
         end
 
         # Create old_links array. Since this page had no links in the table
@@ -154,7 +154,7 @@ def crawl_url(queue_id, crawler)
         # Elsif the entry for the current url in the links table is not empty,
         # add each of those links to the old_links array.
         old_links = []
-        crawler.bsu_links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
+        crawler.links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
       end
 
       # Find the differences between old_links and parsed_links to determine if
@@ -163,7 +163,7 @@ def crawl_url(queue_id, crawler)
       deleted_links = old_links - parsed_links
 
       deleted_links.each do |link|
-        crawler.bsu_links.where('to_url = ?', link).delete
+        crawler.links.where('to_url = ?', link).delete
       end
 
       new_links = removeLeading(new_links)
@@ -172,8 +172,8 @@ def crawl_url(queue_id, crawler)
 
        # If this item in the new_links array is not in the links table, add it
        # to the links table. MAY BE REDUNDANT
-        unless crawler.bsu_links.where(:from_url => url, :to_url => link)
-          insert_data(crawler, crawler.bsu_links, [url, link, 1])
+        unless crawler.links.where(:from_url => url, :to_url => link)
+          insert_data(crawler, crawler.links, [url, link, 1])
         end
 
         # If the current url's pattern field is blank, add this item from
@@ -199,7 +199,7 @@ def crawl_url(queue_id, crawler)
     body = ''
   end
 
-  rec = crawler.bsu_urls.where(:url => url)
+  rec = crawler.urls.where(:url => url)
 
   puts "queue_id: #{ queue_id }
   item: #{ item }
@@ -208,10 +208,10 @@ def crawl_url(queue_id, crawler)
   content type: #{ content_type }
   status: #{ status }"
 
-  if crawler.bsu_urls[:url => url]
+  if crawler.urls[:url => url]
     rec.update(:accessed => last_accessed, :response => body)
   else
-    insert_data(crawler, crawler.bsu_urls, [url, last_accessed, content_type, 1, status, body, valid[1], valid[0]])
+    insert_data(crawler, crawler.urls, [url, last_accessed, content_type, 1, status, body, valid[1], valid[0]])
   end
 
 
@@ -270,9 +270,9 @@ def insert_data(crawler, table, values)
   # incremented and the process repeats itself.
   if table == crawler.queue
     queue.each_with_index { |k,i| data_hash[k] = values[i] }
-  elsif table == crawler.bsu_links
+  elsif table == crawler.links
     links.each_with_index { |k,i| data_hash[k] = values[i] }
-  elsif table == crawler.bsu_urls
+  elsif table == crawler.urls
     urls.each_with_index { |k,i| data_hash[k] = values[i] }
   end
 
