@@ -25,7 +25,7 @@ First, rename sample_config.yaml to config.yaml and modify it to meet your needs
 
 Then, open the sqlite database and insert the first url to be crawled to the urls table.
 
-        INSERT INTO urls VALUES ("www.website.com/", "11-16-2012", "text/html", 1, 200, "html", 1);
+        INSERT INTO urls VALUES ("www.website.com/", "11-16-2012", "text/html", 1, 200, "", "html", 1);
 
 To start the crawler, run the following from the crawler directory.
 
