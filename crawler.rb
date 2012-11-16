@@ -136,8 +136,7 @@ def crawl_url(queue_id, crawler)
         end
       end
 
-      #type_array.each { |array| array = remove_leading(array) }
-      type_array = remove_leading(type_array)
+      type_array.each { |array| array = remove_leading(array) }
       parsed_links = remove_leading(parsed_links)
       parsed_links.uniq!
 
@@ -147,8 +146,8 @@ def crawl_url(queue_id, crawler)
       if crawler.links.where('from_url = ?', url).empty?
 
         parsed_links.each do |link|
-         # type = determine_type(link, type_array)
-          insert_data(crawler, crawler.links, [url, link, 1])
+          type = determine_type(link, type_array)
+          insert_data(crawler, crawler.links, [url, link, type[1]])
         end
 
         # Create old_links array. Since this page had no links in the table
@@ -171,12 +170,12 @@ def crawl_url(queue_id, crawler)
 
       new_links = remove_leading(new_links)
       new_links.each do |link|
-       # type = determine_type(link, type_array)
+       type = determine_type(link, type_array)
 
        # If this item in the new_links array is not in the links table, add it
        # to the links table. MAY BE REDUNDANT
         unless crawler.links.where(:from_url => url, :to_url => link)
-          insert_data(crawler, crawler.links, [url, link, 1])
+          insert_data(crawler, crawler.links, [url, link, type[1]])
         end
 
         # If the current url's pattern field is blank, add this item from
@@ -228,7 +227,7 @@ end
 def determine_type(link, type_array)
   type = type_array.assoc(link)
   type[1] = 'css' if type[1] === 'link'
-  return type[1]
+  return type
 end
 
 #Removes the leading '/' or '../' from the links in an array
