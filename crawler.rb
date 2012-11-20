@@ -3,6 +3,7 @@ require 'nokogiri'
 require 'typhoeus'
 require 'sequel'
 require 'yaml'
+require 'uri'
 require './lib/valid'
 
 class Crawler
@@ -19,6 +20,7 @@ class Crawler
 		@queue = db[:queue]
 		@SHELF = 1#86400
     @domain = config['domain']
+    # @domain = "http://" + config['domain'] unless @domain.include?("http://")
 	end
 
   def set_args()
@@ -181,14 +183,16 @@ def crawl_url(queue_id, crawler)
         # If the current url's pattern field is blank, add this item from
         # new_links to the queue with a blank pattern and a force value of 0.
         if item[:pattern] == ''
-          unless crawler.queue[:url => link]
+          unless crawler.queue[:url => link] || crawler.urls[:url => link]
             insert_data(crawler, crawler.queue, [link, '', 0])
           end
 
         # Elsif the pattern is not blank and 'link' matches the pattern, add
         # link to the queue with the same pattern and force value.
         elsif item[:pattern] != '' && link == item[:pattern]
-          insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]])
+          unless crawler.queue[:url => link] || crawler.urls[:url => link]
+           insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]])
+         end
         end
       end
     end
