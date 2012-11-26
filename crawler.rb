@@ -18,7 +18,7 @@ class Crawler
 		@urls = db[:urls]
 		@links = db[:links]
 		@queue = db[:queue]
-		@SHELF = 1#86400
+		@SHELF = 86400
     @domain = config['domain']
     # @domain = "http://" + config['domain'] unless @domain.include?("http://")
 	end
@@ -172,10 +172,10 @@ def crawl_url(queue_id, crawler)
 
       new_links = remove_leading(new_links)
       new_links.each do |link|
-       type = determine_type(link, type_array)
+      type = determine_type(link, type_array)
 
-       # If this item in the new_links array is not in the links table, add it
-       # to the links table. MAY BE REDUNDANT
+        # If this item in the new_links array is not in the links table, add it
+        # to the links table. MAY BE REDUNDANT
         unless crawler.links.where(:from_url => url, :to_url => link)
           insert_data(crawler, crawler.links, [url, link, type[1]])
         end
@@ -183,16 +183,35 @@ def crawl_url(queue_id, crawler)
         # If the current url's pattern field is blank, add this item from
         # new_links to the queue with a blank pattern and a force value of 0.
         if item[:pattern] == ''
-          unless crawler.queue[:url => link] || crawler.urls[:url => link]
-            insert_data(crawler, crawler.queue, [link, '', 0])
+          unless crawler.queue[:url => link]
+            dataset = crawler.urls[:url => link]
+            if dataset.nil?
+              insert = true
+            elsif Time.parse(dataset[:accessed]) < (Time.now - crawler.SHELF)
+              insert = true
+            else
+              insert = false
+            end
+
+            insert_data(crawler, crawler.queue, [link, '', 0]) if insert == true
           end
+
+          # if !crawler.queue.where(:url => link) || crawler.url.where(:url => link) & (:accessed > Time.now - crawler.SHELF)
 
         # Elsif the pattern is not blank and 'link' matches the pattern, add
         # link to the queue with the same pattern and force value.
-        elsif item[:pattern] != '' && link == item[:pattern]
-          unless crawler.queue[:url => link] || crawler.urls[:url => link]
-           insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]])
-         end
+        elsif item[:pattern] != ''
+          unless crawler.queue[:url => link]
+            dataset = crawler.urls[:url => link]
+            if dataset.nil?
+              insert = true
+            elsif Time.parse(dataset[:accessed]) < (Time.now - crawler.SHELF)
+              insert = true
+            else
+              insert = false
+            end
+            insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]]) if insert == true
+          end
         end
       end
     end
