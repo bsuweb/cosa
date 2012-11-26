@@ -183,35 +183,12 @@ def crawl_url(queue_id, crawler)
         # If the current url's pattern field is blank, add this item from
         # new_links to the queue with a blank pattern and a force value of 0.
         if item[:pattern] == ''
-          unless crawler.queue[:url => link]
-            dataset = crawler.urls[:url => link]
-            if dataset.nil?
-              insert = true
-            elsif Time.parse(dataset[:accessed]) < (Time.now - crawler.SHELF)
-              insert = true
-            else
-              insert = false
-            end
-
-            insert_data(crawler, crawler.queue, [link, '', 0]) if insert == true
-          end
-
-          # if !crawler.queue.where(:url => link) || crawler.url.where(:url => link) & (:accessed > Time.now - crawler.SHELF)
+          insert_data(crawler, crawler.queue, [link, '', 0]) if check_duplicates(crawler, link) == true
 
         # Elsif the pattern is not blank and 'link' matches the pattern, add
         # link to the queue with the same pattern and force value.
         elsif item[:pattern] != ''
-          unless crawler.queue[:url => link]
-            dataset = crawler.urls[:url => link]
-            if dataset.nil?
-              insert = true
-            elsif Time.parse(dataset[:accessed]) < (Time.now - crawler.SHELF)
-              insert = true
-            else
-              insert = false
-            end
-            insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]]) if insert == true
-          end
+          insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]]) if check_duplicates(crawler, link) == true
         end
       end
     end
@@ -240,6 +217,24 @@ def crawl_url(queue_id, crawler)
   end
 
 
+end
+
+#Additional checking to make sure duplicate links aren't added to the queue.
+#
+# crawler - Crawler object
+# link    - Link being checked
+#
+def check_duplicates(crawler, link)
+  unless crawler.queue[:url => link]
+    dataset = crawler.urls[:url => link]
+    if dataset.nil?
+      return true
+    elsif Time.parse(dataset[:accessed]) < (Time.now - crawler.SHELF)
+      return true
+    else
+      return false
+    end
+  end
 end
 
 #Determines the type of a link based on its 'tag'
