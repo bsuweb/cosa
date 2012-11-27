@@ -220,6 +220,10 @@ def crawl_url(queue_id, crawler)
 end
 
 #Additional checking to make sure duplicate links aren't added to the queue.
+#Unless the current link is already in the queue, check to see if the current
+#link is listed in the urls table. If it isn't, return true. If it is, and it
+#hasn't been accessed in the last day return true. Else return false. If true
+#is returned, add the link to the queue.
 #
 # crawler - Crawler object
 # link    - Link being checked
