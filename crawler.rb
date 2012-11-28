@@ -20,7 +20,6 @@ class Crawler
 		@queue = db[:queue]
 		@SHELF = 86400
     @domain = config['domain']
-    # @domain = "http://" + config['domain'] unless @domain.include?("http://")
 	end
 
   def set_args()
@@ -124,19 +123,17 @@ def crawl_url(queue_id, crawler)
         # 'mailto:', add that element to the parsed_links array. Also add that
         # element and it's 'tag' to the type_array array.
         if item[:href]
-          if item[:href] != "#" && !item[:href].include?('mailto:')
-            parsed_links << item[:href]
-            type_array << [item[:href], item.name]
+          if !item[:href].include?('#') && !item[:href].include?('mailto:')
+            insert_links(item, url, :href, parsed_links, type_array)
           end
 
         # Else if the element contains an scr attribute, add it to the
         # parsed_links array. Also add that element and it's 'tag' to the
         # type_array array.
         elsif item[:src]
-          parsed_links << item[:src]
-          type_array << [item[:src], item.name]
+          insert_links(item, url, :src, parsed_links, type_array)
         end
-      end
+        end
 
       type_array.each { |array| array = remove_leading(array) }
       parsed_links = remove_leading(parsed_links)
@@ -219,6 +216,27 @@ def crawl_url(queue_id, crawler)
 
 end
 
+#Edits links being added to parsed_links and type_array so that they are not
+#added as 'relative links'.
+#
+# item          - Curent page being added
+# url           - Current url
+# type          - href or src
+# parsed_links  - array of links on the current url
+# type_array    - array containing links on the current page and their 'types'
+#
+def insert_links(item, url, type, parsed_links, type_array)
+  if !item[type].include?(url) && !item[type].include?('/')
+    if url[-1,1] == '/'
+      item[type] = url + item[type]
+    else
+      item[type] = url + '/' + item[type]
+    end
+  end
+  parsed_links << item[type]
+  type_array << [item[type], item.name]
+end
+
 #Additional checking to make sure duplicate links aren't added to the queue.
 #Unless the current link is already in the queue, check to see if the current
 #link is listed in the urls table. If it isn't, return true. If it is, and it
@@ -284,7 +302,6 @@ def insert_data(crawler, table, values)
   queue = [:url, :pattern, :force]
   links = [:from_url, :to_url, :type]
   urls = [:url, :accessed, :content_type, :content_length, :status, :response, :validation_type, :valid]
-
   data_hash = {}
 
   # Checks to see which table is being accessed and then creates the hash to
