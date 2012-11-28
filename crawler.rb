@@ -36,6 +36,9 @@ end
 #
 def seed(crawler)
 	crawler.urls.each do |row|
+
+    row[:url] = row[:url] + '/' if row == crawler.urls.first && crawler.queue.empty?
+
 		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
       insert_data(crawler, crawler.queue, [row[:url], '', 0])
 		end
@@ -126,14 +129,13 @@ def crawl_url(queue_id, crawler)
           if !item[:href].include?('#') && !item[:href].include?('mailto:')
             insert_links(item, url, :href, parsed_links, type_array)
           end
-
         # Else if the element contains an scr attribute, add it to the
         # parsed_links array. Also add that element and it's 'tag' to the
         # type_array array.
         elsif item[:src]
           insert_links(item, url, :src, parsed_links, type_array)
         end
-        end
+      end
 
       type_array.each { |array| array = remove_leading(array) }
       parsed_links = remove_leading(parsed_links)
