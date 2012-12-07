@@ -36,9 +36,6 @@ end
 #
 def seed(crawler)
 	crawler.urls.each do |row|
-
-    row[:url] = row[:url] + '/' if row == crawler.urls.first && crawler.queue.empty?
-
 		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
       insert_data(crawler, crawler.queue, [row[:url], '', 0])
 		end
@@ -249,7 +246,7 @@ end
 # link    - Link being checked
 #
 def check_duplicates(crawler, link)
-  unless crawler.queue[:url => link]
+  unless crawler.queue[:url => link] || link == ""
     dataset = crawler.urls[:url => link]
     if dataset.nil?
       return true
