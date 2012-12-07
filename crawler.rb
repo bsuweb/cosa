@@ -146,20 +146,17 @@ def crawl_url(queue_id, crawler)
       # If the entry for the current url in the links table is empty, add each
       # item from the parsed_links array to the links table with the format
       # :from_url => current_url, :to_url => parsed_links_item, :type => type
-      if crawler.links.where('from_url = ?', url).empty?
+      if crawler.links.where(:from_url => url).empty?
 
         parsed_links.each do |link|
           type = determine_type(link, type_array)
           insert_data(crawler, crawler.links, [url, link, type[1]])
         end
-
-        # Create old_links array. Since this page had no links in the table
-        # previously, the old_links array is empty.
       else
 
         # Else the entry for the current url in the links table is not empty.
         # Add each of those links to the old_links array.
-        crawler.links.where('from_url = ?', url).each { |link| old_links << link[:to_url] }
+        crawler.links.where(:from_url => url).each { |link| old_links << link[:to_url] }
       end
 
       # Find the differences between old_links and parsed_links to determine if
@@ -168,7 +165,7 @@ def crawl_url(queue_id, crawler)
       deleted_links = old_links - parsed_links
 
       deleted_links.each do |link|
-        crawler.links.where('to_url = ?', link).delete
+        crawler.links.where(:to_url => link).delete
       end
 
       new_links = remove_leading(new_links)
@@ -176,7 +173,7 @@ def crawl_url(queue_id, crawler)
       type = determine_type(link, type_array)
 
         # If this item in the new_links array is not in the links table, add it
-        # to the links table. MAY BE REDUNDANT
+        # to the links table.
         unless crawler.links.where(:from_url => url, :to_url => link)
           insert_data(crawler, crawler.links, [url, link, type[1]])
         end
@@ -216,7 +213,6 @@ def crawl_url(queue_id, crawler)
   else
     insert_data(crawler, crawler.urls, [url, last_accessed, content_type, 1, status, body, valid[1], valid[0]])
   end
-
 
 end
 
