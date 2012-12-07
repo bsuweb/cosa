@@ -2,5 +2,5 @@
 
 domain: www.yourdomain.com
 
-# Ex) db_path: sqlite:///Users/username/Documents/crawler/data/database.db
-db_path: sqlite:///absolute/path/to/database.db
+# Ex) db_path: sqlite:///Users/username/Documents/crawler/data/database.sqlite
+db_path: sqlite:///absolute/path/to/database.sqlite
