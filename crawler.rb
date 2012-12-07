@@ -96,6 +96,7 @@ def crawl_url(queue_id, crawler)
   end
 
   response = Typhoeus::Request.get(url, :timeout => 30000)
+  url = response.effective_url
 
   content_type = response.headers_hash["Content-Type"]
   if content_type.include?(';')
