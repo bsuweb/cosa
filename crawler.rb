@@ -95,7 +95,11 @@ def crawl_url(queue_id, crawler)
     url = crawler.domain + '/' + url
   end
 
-  response = Typhoeus::Request.get(url, :timeout => 30000)
+  response = Typhoeus::Request.get(url,
+                                  :timeout => 30000,
+                                  :headers => {
+                                    'User-Agent' => "Crawler/0.1 ()"
+                                  })
   url = response.effective_url
 
   content_type = response.headers_hash["Content-Type"]
