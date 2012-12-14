@@ -7,7 +7,7 @@ require 'uri'
 require './lib/valid'
 
 class Crawler
-	attr_accessor :db, :urls, :links, :queue, :SHELF, :domain
+	attr_accessor :db, :urls, :links, :queue, :SHELF, :domain, :start_time
 
 	def initialize()
     # Load configuration file
@@ -20,6 +20,7 @@ class Crawler
 		@queue = db[:queue]
 		@SHELF = 86400
     @domain = config['domain']
+    @start_time = Time.now
 	end
 
   def set_args()
@@ -36,11 +37,11 @@ end
 #
 def seed(crawler)
 	crawler.urls.each do |row|
-		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
-      insert_data(crawler, crawler.queue, [row[:url], '', 0])
+		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF || crawler.force == 1
+      insert_data(crawler, crawler.queue, [row[:url], crawler.pattern, crawler.force])
 		end
 	end
-  crawl_queue(crawler)
+  return crawl_queue(crawler) unless crawler.queue.empty?
 end
 
 #Get the first row in the queue and check to see if either the force flag is
@@ -67,11 +68,6 @@ def crawl_queue(crawler)
   end
   # Delete the sequel object from the queue table.
   crawler.queue.where(:id => row[:id]).delete
-
-  unless crawler.queue.empty?
-    crawl_queue(crawler)
-  end
-
 end
 
 def crawl_url(queue_id, crawler)
@@ -185,7 +181,7 @@ def crawl_url(queue_id, crawler)
 
         # Elsif the pattern is not blank and 'link' matches the pattern, add
         # link to the queue with the same pattern and force value.
-        elsif item[:pattern] != ''
+        elsif item[:pattern] != '' && link.include?(item[:pattern])
           insert_data(crawler, crawler.queue, [link, item[:pattern], item[:force]]) if check_duplicates(crawler, link) == true
         end
       end
@@ -206,7 +202,8 @@ def crawl_url(queue_id, crawler)
   url: #{ url }
   last_accessed: #{ last_accessed }
   content type: #{ content_type }
-  status: #{ status }"
+  status: #{ status }
+  runtime: #{ Time.now - crawler.start_time}"
 
   if crawler.urls[:url => url]
     rec.update(:accessed => last_accessed, :response => body)
@@ -266,7 +263,11 @@ end
 #
 def determine_type(link, type_array)
   type = type_array.assoc(link)
-  type[1] = 'css' if type[1] === 'link'
+  begin
+    type[1] = 'css' if type[1] === 'link'
+  rescue
+    type = ['','']
+  end
   return type
 end
 
@@ -324,3 +325,10 @@ end
 
 crawler = Crawler.new()
 seed(crawler)
+while true
+  if !crawler.queue.empty?
+    crawl_queue(crawler)
+  else
+    break
+  end
+end
