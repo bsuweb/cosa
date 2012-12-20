@@ -23,12 +23,16 @@ If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutoria
 
 First, rename sample_config.yaml to config.yaml and modify it to meet your needs.
 
-Then, open the sqlite database and insert the first url to be crawled to the urls table.
+You have three options when running the crawler:
 
-        INSERT INTO urls VALUES ("http://www.website.com/", "2012-11-16", "text/html", 1, 200, "", "html", 1);
+        ruby crawler.rb http://www.example.com
+        
+The crawler will start at this address, and crawl every page on the site.
 
-To start the crawler, run the following from the crawler directory.
+        ruby crawler.rb http://www.example.com/directory/ /directory/page/
+        
+The crawler will start at http://www.example.com/directory/, and then only add links to the queue if they contain the pattern of http://www.example.com/directory/page/
 
         ruby crawler.rb
-
-For the time being, the crawler will take care of the rest.
+        
+If you have already run the crawler, this will check the first link in the urls table and see if it has been crawled within the shelf time(default 1 day). If it hasn't, that url will be added to the queue and the site will be recrawled.
