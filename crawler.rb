@@ -37,8 +37,8 @@ end
 #
 def seed(crawler)
 	crawler.urls.each do |row|
-		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF || crawler.force == 1
-      insert_data(crawler, crawler.queue, [row[:url], crawler.pattern, crawler.force])
+		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
+      insert_data(crawler, crawler.queue, [row[:url], '', 0])
 		end
 	end
   return crawl_queue(crawler) unless crawler.queue.empty?
@@ -79,16 +79,9 @@ def crawl_url(queue_id, crawler)
   old_links = []
   type_array = []
 
-  if url.include?(crawler.domain)
-    #url is internal, url = url
-  elsif url[0] == '/' || url[0,2] == '../'
-    #url is internal
-    url = crawler.domain + url
-  elsif url.include?('http')
+  if url.include?('http') && !url.include?(crawler.domain)
     #url is external, url = url
     internal = false
-  else
-    url = crawler.domain + '/' + url
   end
 
   response = Typhoeus::Request.get(url,
@@ -121,17 +114,18 @@ def crawl_url(queue_id, crawler)
       Nokogiri::HTML(body).css('a', 'link', 'img', 'video', 'audio', 'script', 'object').each do |item|
 
         # If element contains an href attribute, and that is not set to '#' or
-        # 'mailto:', add that element to the parsed_links array. Also add that
-        # element and it's 'tag' to the type_array array.
+        # 'mailto:', or http://, or contains a '@' symbol add that element to
+        # the parsed_links array. Also add that element and it's 'tag' to the
+        # type_array array.
         if item[:href]
-          if !item[:href].include?('#') && !item[:href].include?('mailto:')
-            insert_links(item, url, :href, parsed_links, type_array)
+          if !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
+            insert_links(crawler, item, url, :href, parsed_links, type_array)
           end
         # Else if the element contains an scr attribute, add it to the
         # parsed_links array. Also add that element and it's 'tag' to the
         # type_array array.
         elsif item[:src]
-          insert_links(item, url, :src, parsed_links, type_array)
+          insert_links(crawler, item, url, :src, parsed_links, type_array)
         end
       end
 
@@ -216,20 +210,15 @@ end
 #Edits links being added to parsed_links and type_array so that they are not
 #added as 'relative links'.
 #
+# crawler       - Crawler object
 # item          - Curent page being added
 # url           - Current url
 # type          - href or src
 # parsed_links  - array of links on the current url
 # type_array    - array containing links on the current page and their 'types'
 #
-def insert_links(item, url, type, parsed_links, type_array)
-  if !item[type].include?(url) && !item[type].include?('/')
-    if url[-1,1] == '/'
-      item[type] = url + item[type]
-    else
-      item[type] = url + '/' + item[type]
-    end
-  end
+def insert_links(crawler, item, url, type, parsed_links, type_array)
+  item[type] = URI.join( url, URI.escape(item[type].strip, "[]() ") ).to_s
   parsed_links << item[type]
   type_array << [item[type], item.name]
 end
@@ -244,7 +233,7 @@ end
 # link    - Link being checked
 #
 def check_duplicates(crawler, link)
-  unless crawler.queue[:url => link] || link == ""
+  unless crawler.queue[:url => link] || link == crawler.domain + '/'
     dataset = crawler.urls[:url => link]
     if dataset.nil?
       return true
