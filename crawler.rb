@@ -125,7 +125,9 @@ def crawl_url(queue_id, crawler)
         # parsed_links array. Also add that element and it's 'tag' to the
         # type_array array.
         elsif item[:src]
-          insert_links(crawler, item, url, :src, parsed_links, type_array)
+          if item[:src][0..4] != 'data:'
+            insert_links(crawler, item, url, :src, parsed_links, type_array)
+          end
         end
       end
 
