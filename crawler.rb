@@ -23,10 +23,6 @@ class Crawler
     @start_time = Time.now
 	end
 
-  def set_args()
-    #TODO
-  end
-
 end
 
 #For each page in the urls table, see if the page has been
@@ -54,12 +50,13 @@ def crawl_queue(crawler)
   # Create a Sequel object that corresponds to the first item in the queue
   # table. 'row' gets that value.
   row = crawler.queue.first
+  puts row
 
   # If the force column in the sequel object is set to true crawl the page.
   # Elsif the url of the sequel object is not in the urls table crawl the page.
   # Elsif the sequel object is in the urls table, but has not been accessed
   # within the shelf time crawl the page.
-  if row[:force] == true
+  if row[:force] == 1
     crawl_url(row[:id], crawler)
   elsif !crawler.urls[:url => row[:url]]
     crawl_url(row[:id], crawler)
@@ -82,6 +79,8 @@ def crawl_url(queue_id, crawler)
   if url.include?('http') && !url.include?(crawler.domain)
     #url is external, url = url
     internal = false
+  elsif url[-1, 10] == "index.html"
+    url = url[0..-10]
   end
 
   response = Typhoeus::Request.get(url,
@@ -220,7 +219,7 @@ end
 # type_array    - array containing links on the current page and their 'types'
 #
 def insert_links(crawler, item, url, type, parsed_links, type_array)
-  item[type] = URI.join( url, URI.escape(item[type].strip, "[]() ") ).to_s
+  item[type] = URI.join( url, URI.escape(item[type].strip, "[]()| ") ).to_s
   parsed_links << item[type]
   type_array << [item[type], item.name]
 end
@@ -315,7 +314,24 @@ def insert_data(crawler, table, values)
 end
 
 crawler = Crawler.new()
-seed(crawler)
+
+if ARGV.length < 1
+  # No Arguments, check each url in the urls table and add old urls to the
+  # queue to be checked again.
+  seed(crawler)
+elsif ARGV.length > 1
+  # 2 Arguments, gets the url to add to the queue and the pattern to use when
+  # checking pages.
+  options = { "url" => ARGV.shift, "pattern" => ARGV.shift }
+  options["pattern"] = URI.join( options["url"], options["pattern"] ).to_s
+  insert_data(crawler, crawler.queue, [ options["url"], options["pattern"], 1 ])
+else
+  # 1 Argument, gets the url to add to the queue.
+  options = { "url" => ARGV.shift, "pattern" => ARGV.shift }
+  insert_data(crawler, crawler.queue, [ options["url"], '', 1 ])
+end
+
+# Check the next item in the queue as long as the queue is not empty
 while true
   if !crawler.queue.empty?
     crawl_queue(crawler)
