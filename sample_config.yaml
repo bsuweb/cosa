@@ -2,5 +2,9 @@
 
 domain: www.yourdomain.com
 
+# Amount of time between crawls on the same page
+# 86400 seconds by default (1 day)
+shelf_life: 86400
+
 # Ex) db_path: sqlite:///Users/username/Documents/crawler/data/database.sqlite
 db_path: sqlite:///absolute/path/to/database.sqlite
