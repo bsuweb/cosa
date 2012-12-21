@@ -30,6 +30,12 @@ class Crawler
 
 end
 
+class String
+  def numeric?
+    !self.match(/[^0-9]/)
+  end
+end
+
 #For each page in the urls table, see if the page has been
 #accessed within the seed time. If it has not,add that url to the
 #queue with the pattern set to '' and force set to 0.
@@ -96,6 +102,12 @@ def crawl_url(queue_id, crawler)
   url = response.effective_url
 
   content_type = response.headers_hash["Content-Type"]
+  if response.headers_hash["Content-Length"].to_s.numeric?
+    content_length = response.headers_hash["Content-Length"]
+  else
+    content_length = ""
+  end
+
   if content_type.include?(';')
     content_type = content_type[0, content_type.index(';')]
   elsif content_type == {}
@@ -202,13 +214,14 @@ def crawl_url(queue_id, crawler)
   url: #{ url }
   last_accessed: #{ last_accessed }
   content type: #{ content_type }
+  content length: #{ content_length }
   status: #{ status }
   runtime: #{ Time.now - crawler.start_time}"
 
   if crawler.urls[:url => url]
     rec.update(:accessed => last_accessed, :response => body)
   else
-    insert_data(crawler, crawler.urls, [url, last_accessed, content_type, 1, status, body, valid[1], valid[0]])
+    insert_data(crawler, crawler.urls, [url, last_accessed, content_type, content_length, status, body, valid[1], valid[0]])
   end
 
 end
