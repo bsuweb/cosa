@@ -56,3 +56,9 @@ Cosa uses a simple database with the following three tables:
 
 
 Currently Cosa only supports SQLite although support for MySQL is planned. 
+
+## Juan de la Cosa
+
+We named Cosa after [Juan de la Cosa](http://en.wikipedia.org/wiki/Juan_de_la_Cosa).
+
+> He made the earliest extant European world map to incorporate the territories of the Americas that were discovered in the 15th century, sailed with Christopher Columbus on his first three voyages, and was the owner/captain of the Santa María.
