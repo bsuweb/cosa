@@ -37,11 +37,11 @@ end
 # crawler - Crawler object
 #
 def seed(crawler)
-	crawler.urls.each do |row|
-		if Time.parse(row[:accessed]) < Time.now - crawler.SHELF
-      insert_data(crawler, crawler.queue, [row[:url], '', 0])
-		end
-	end
+  to_crawl = crawler.urls.where{accessed < Time.now - crawler.SHELF}
+  to_crawl.each do |row|
+    insert_data(crawler, crawler.queue, [row[:url], '', 0])
+  end
+
   return crawl_queue(crawler) unless crawler.queue.empty?
 end
 
