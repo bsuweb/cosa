@@ -18,9 +18,14 @@ class Crawler
 		@urls = db[:urls]
 		@links = db[:links]
 		@queue = db[:queue]
-		@SHELF = config['shelf_life']
     @domain = config['domain']
     @start_time = Time.now
+
+    if config['shelf_life']
+      @SHELF = config['shelf_life']
+    else
+      @SHELF = 86400
+    end
 	end
 
 end
