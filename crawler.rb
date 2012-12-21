@@ -219,7 +219,7 @@ end
 # type_array    - array containing links on the current page and their 'types'
 #
 def insert_links(crawler, item, url, type, parsed_links, type_array)
-  item[type] = URI.join( url, URI.escape(item[type].strip, "[]()| ") ).to_s
+  item[type] = URI.join( url, URI.escape(item[type].gsub(/\s+/, '').strip, "[]()| ") ).to_s
   parsed_links << item[type]
   type_array << [item[type], item.name]
 end
