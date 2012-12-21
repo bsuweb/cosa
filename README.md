@@ -1,4 +1,18 @@
-# crawler
+`crawler` is a simple web crawler that builds a database of URL's for use with by tools and reports. 
+
+It starts with a URL and domain name and will parse links returned by that URL, check all links to web pages, images, CSS, and script files. Links to HTML pages on the same domain will be recursively parsed until the queue finishes. Results from each URL and the link structure are contained in the database. 
+
+The crawler will only re-crawl URL's when the shelf life has expired or when specifically requested to re-fetch a URL. The default shelf life is one day, this can be changed in the config.
+
+The database is fairly simple, with the following three tables:
+
+* `urls` – each URL linked to from the site. Contains: `url`, `date_accessed`, `content_type`, `content_length`, `status`, `response` (the entire HTTP response body), `validation_type`, and `valid`
+* `links` – stores the relationship between URL's. Once the crawler is complete, you can query this table to determine all URL's a given URL links to, and all URL's that link to a given URL.
+* `queue` working list of URL's that are left to crawl before the crawler is done.
+
+Because the crawler stores its `queue` or current state in the database, you can quit the program at any time and when you restart it will begin where it left off.
+
+Currently it only supports SQLite although support for MySQL is planned. 
 
 ## Dependencies
 
