@@ -62,3 +62,9 @@ Currently Cosa only supports SQLite although support for MySQL is planned.
 We named Cosa after [Juan de la Cosa](http://en.wikipedia.org/wiki/Juan_de_la_Cosa).
 
 > He made the earliest extant European world map to incorporate the territories of the Americas that were discovered in the 15th century, sailed with Christopher Columbus on his first three voyages, and was the owner/captain of the Santa María.
+
+## License
+
+Cosa is released under the [MIT License](http://opensource.org/licenses/MIT).
+
+Copyright (C) 2012-2013 Bemidji State University
