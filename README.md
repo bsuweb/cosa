@@ -71,7 +71,7 @@ Copyright (C) 2012-2013 Bemidji State University
 
 ## Changelog
 
-* v0.1 (2013-01-09)
+* [v0.1 (2013-01-09)](https://github.com/bsuweb/cosa/tree/v0.1)
  * Crawls a given webpage, and any connected pages. 
  * Crawls a given webpage, and any connected pages matching a given pattern.
  * Re-crawls a site if it has bot been crawled within a given time.
