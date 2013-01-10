@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'nokogiri'
 require 'typhoeus'
 require 'sequel'
@@ -9,7 +8,7 @@ require './lib/valid'
 class Cosa
 	attr_accessor :db, :urls, :links, :queue, :SHELF, :domain, :start_time
 
-	def initialize()
+	def initialize
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
     config = YAML::load( File.open( 'config.yaml') )
@@ -61,7 +60,6 @@ def crawl_queue(cosa)
   # Create a Sequel object that corresponds to the first item in the queue
   # table. 'row' gets that value.
   row = cosa.queue.first
-  puts row
 
   # If the force column in the sequel object is set to true crawl the page.
   # Elsif the url of the sequel object is not in the urls table crawl the page.
@@ -100,6 +98,7 @@ def crawl_url(queue_id, cosa)
                                     'User-Agent' => "Cosa/0.1 ()"
                                   })
   url = response.effective_url
+  response_time = response.total_time.round(6)
 
   content_type = response.headers_hash["Content-Type"]
   if response.headers_hash["Content-Length"].to_s.numeric?
@@ -172,6 +171,8 @@ def crawl_url(queue_id, cosa)
       new_links = parsed_links - old_links
       deleted_links = old_links - parsed_links
 
+      new_links = parsed_links if item[:force] == 1
+
       deleted_links.each do |link|
         cosa.links.where(:to_url => link).delete
       end
@@ -216,12 +217,13 @@ def crawl_url(queue_id, cosa)
   content type: #{ content_type }
   content length: #{ content_length }
   status: #{ status }
-  runtime: #{ Time.now - cosa.start_time}"
+  response time: #{ response_time }
+  total runtime: #{ Time.now - cosa.start_time}"
 
   if cosa.urls[:url => url]
     rec.update(:accessed => last_accessed, :response => body)
   else
-    insert_data(cosa, cosa.urls, [url, last_accessed, content_type, content_length, status, body, valid[1], valid[0]])
+    insert_data(cosa, cosa.urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
   end
 
 end
@@ -237,7 +239,7 @@ end
 # type_array    - array containing links on the current page and their 'types'
 #
 def insert_links(cosa, item, url, type, parsed_links, type_array)
-  item[type] = URI.join( url, URI.escape(item[type].gsub(/\s+/, '').strip, "[]()| ") ).to_s
+  item[type] = URI.join( url, URI.escape(item[type].gsub(/\s+\"|"/, '').strip, "[]()| ") ).to_s
   parsed_links << item[type]
   type_array << [item[type], item.name]
 end
@@ -310,7 +312,7 @@ end
 def insert_data(cosa, table, values)
   queue = [:url, :pattern, :force]
   links = [:from_url, :to_url, :type]
-  urls = [:url, :accessed, :content_type, :content_length, :status, :response, :validation_type, :valid]
+  urls = [:url, :accessed, :content_type, :content_length, :status, :response, :response_time, :validation_type, :valid]
   data_hash = {}
 
   # Checks to see which table is being accessed and then creates the hash to
@@ -340,13 +342,13 @@ if ARGV.length < 1
 elsif ARGV.length > 1
   # 2 Arguments, gets the url to add to the queue and the pattern to use when
   # checking pages.
-  options = { "url" => ARGV.shift, "pattern" => ARGV.shift }
-  options["pattern"] = URI.join( options["url"], options["pattern"] ).to_s
-  insert_data(cosa, cosa.queue, [ options["url"], options["pattern"], 1 ])
+  options = { :url => ARGV.shift, :pattern => ARGV.shift }
+  options[:pattern] = URI.join( options[:url], options[:pattern] ).to_s
+  insert_data(cosa, cosa.queue, [ options[:url], options[:pattern], 1 ])
 else
   # 1 Argument, gets the url to add to the queue.
-  options = { "url" => ARGV.shift, "pattern" => ARGV.shift }
-  insert_data(cosa, cosa.queue, [ options["url"], '', 1 ])
+  options = { :url => ARGV.shift, :pattern => ARGV.shift }
+  insert_data(cosa, cosa.queue, [ options[:url], '', 1 ])
 end
 
 # Check the next item in the queue as long as the queue is not empty
