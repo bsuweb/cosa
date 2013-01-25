@@ -3,8 +3,8 @@ require 'typhoeus'
 require 'sequel'
 require 'yaml'
 require 'uri'
+require 'trollop'
 require './lib/valid'
-require './lib/io'
 
 class String
   def numeric?
@@ -44,7 +44,7 @@ class Database
       opt :init, "Command-line tool for creating and saving a config file"
       opt :add, "Add a URL to the queue", :type => :strings
       opt :config, "If not specified, Cosa will use the default config if it exists", :type => :string
-      opt :crawl, "Start the crawler. Optional switches for silent or verbose output.", :type => :string
+      # opt :crawl, "Start the crawler. Optional switches for silent or verbose output.", :type => :string
       opt :broken, "List all URLs that contain broken links and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
       opt :invalid_html, "List pages with invalid html."
@@ -56,9 +56,9 @@ class Database
       opt :unresponsive, "List URLs that were not responsive."
       opt :to, "List URLs that link to the given URL.", :type => :string
       opt :from, "List URLs that the given URL links to.", :type => :string
-      opt :silent, "Silence all output."
-      opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given path.", :type => :string
-      opt :verbose, "Verbose output."
+      opt :silent, "Silence all output.", :short => 's'
+      opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given path.", :type => :string, :short => "-o"
+      opt :verbose, "Verbose output.", :short => "-v"
     end
   set_opts(opts)
   end
@@ -75,6 +75,7 @@ class Database
     # No idea if this is more 'better' that if/else
     # opts[:config] ? config = YAML::load( File.open(opts[:config])) : YAML::load( File.open(opts['config.yaml']))
 
+    @output = "default"
     @output = "silent" if opts[:silent]
     @output = "verbose" if opts[:verbose]
 
@@ -84,7 +85,6 @@ class Database
     @queue = db[:queue]
     @domain = config['domain']
     @start_time = Time.now
-    @output = "default"
 
     if config['shelf_life']
       @SHELF = config['shelf_life']
