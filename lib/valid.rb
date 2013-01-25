@@ -14,7 +14,6 @@ require 'rexml/document'
 #
 def valid?(page, content_type)
   content = content_type.to_s
-  puts content
   valid = nil
   valid_array = [{html: "text/html"}, {xml: "text/xml"}, {css: "text/css"}, {rss: "application/rss+xml"}, {rss: "application/rdf+xml"}, {rss: "application/atom+xml"}]
 
@@ -32,7 +31,6 @@ def valid?(page, content_type)
   else
     type = nil
   end
-  puts type
   # begin
   # REXML::Document.new(page)
   # rescue REXML::ParseException
