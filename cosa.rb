@@ -52,7 +52,7 @@ class Database
       opt :age, "List all URLs that are older than the given date.", :type => :string
       opt :queue, "List the current queue."
       opt :clear_queue, "Empty the queue"
-      opt :response_time, "List the URLs that took longer than <seconds> to responsd.", :type => :integer
+      opt :response_time, "List the URLs that took longer than <seconds> to responsd.", :type => :float
       opt :unresponsive, "List URLs that were not responsive."
       opt :to, "List URLs that link to the given URL.", :type => :string
       opt :from, "List URLs that the given URL links to.", :type => :string
@@ -64,20 +64,15 @@ class Database
   end
 
   def set_opts(opts)
-    puts opts
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
     if opts[:config]
       config = YAML::load( File.open(opts[:config]) )
+    elsif File.exists?('config.yaml')
+        config = YAML::load( File.open('config.yaml') )
     else
-      config = YAML::load( File.open('config.yaml') )
+      # create_config
     end
-    # No idea if this is more 'better' that if/else
-    # opts[:config] ? config = YAML::load( File.open(opts[:config])) : YAML::load( File.open(opts['config.yaml']))
-
-    @output = "default"
-    @output = "silent" if opts[:silent]
-    @output = "verbose" if opts[:verbose]
 
     @db = Sequel.connect(config['db_path'])
     @urls = db[:urls]
@@ -87,9 +82,63 @@ class Database
     @start_time = Time.now
 
     if config['shelf_life']
-      @SHELF = config['shelf_life']
+      @@SHELF = config['shelf_life']
     else
-      @SHELF = 86400
+      @@SHELF = 86400
+    end
+
+    @output = "default"
+    @output = "silent" if opts[:silent]
+    @output = "verbose" if opts[:verbose]
+
+    # Clear Queue
+    if opts[:clear_queue] then queue.delete end
+
+    # List Queue
+    if opts[:queue] then queue.each { |x| puts x[:url] } end
+
+    # Add to Queue
+    if opts[:add] then insert_data_into(queue, [ opts[:add], '', 1 ]) end
+
+    # List CSS
+    if opts[:css]
+      temp = []
+      @links.where(:type => 'css').each { |x| temp << x[:to_url] }
+      temp.uniq!.each { |y| puts y }
+    end
+
+    # List to
+    if opts[:to] then @links.where(:to_url => opts[:to]).each { |x| puts x[:from_url] } end
+
+    # List from
+    if opts[:from] then @links.where(:from_url => opts[:from]).each { |x| puts x[:to_url] } end
+
+    # List response time
+    if opts[:response_time]
+      urls = @urls.where{ response_time > opts[:response_time] }
+      urls.each { |x| puts "#{ x[:url] } | #{ x[:response_time] }"}
+      # @urls.each { |x| puts x[:response_time] }
+      # Time.parse(x[:response_time])
+    end
+  end
+
+  def create_config
+    strings = [
+              "No config file given, or exists. Would you like to create one? (y/n) ",
+              "Enter the base domain to be crawled. (ex: http://www.example.com) ",
+              "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
+              "Enter a path for the database (leave blank for default) "
+              ]
+
+    puts strings[0]
+    ans = $stdin.gets[0,1].chomp.downcase
+    if ans == 'y'
+      puts strings[1]
+      domain = $stdin.gets.chomp.downcase
+      puts strings[2]
+      shelf = $sdtin.gets.chomp
+      puts strings[3]
+      db_path = $sdtin.gets.chomp.downcase
     end
   end
 
@@ -98,7 +147,7 @@ class Database
   # queue with the pattern set to '' and force set to 0.
   #
   def seed
-    to_crawl = urls.where{ accessed < Time.now - SHELF }
+    to_crawl = urls.where{ accessed < Time.now - @@SHELF }
     to_crawl.each do |row|
       insert_data_into_into(queue, [row[:url], '', 0])
     end
@@ -344,7 +393,7 @@ class Database
       dataset = urls[:url => link]
       if dataset.nil?
         true
-      elsif Time.parse(dataset[:accessed]) < (Time.now - @SHELF)
+      elsif Time.parse(dataset[:accessed]) < (Time.now - @@SHELF)
         true
       else
         false
@@ -390,12 +439,12 @@ class Database
 end
 
 crawler = Database.new()
-puts crawler.SHELF
 
 if ARGV.length < 1
   # No Arguments, check each url in the urls table and add old urls to the
   # queue to be checked again.
-  crawler.seed
+  # crawler.seed
+  Process.exit
 elsif ARGV.length > 1
   # 2 Arguments, gets the url to add to the queue and the pattern to use when
   # checking pages.
