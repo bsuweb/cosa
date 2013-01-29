@@ -52,7 +52,7 @@ class Database
       opt :age, "List all URLs that are older than the given date.", :type => :string
       opt :queue, "List the current queue."
       opt :clear_queue, "Empty the queue"
-      opt :response_time, "List the URLs that took longer than <seconds> to responsd.", :type => :float
+      opt :response_time, "List the URLs that took longer than <seconds> to respond.", :type => :float, :short => '-r'
       opt :unresponsive, "List URLs that were not responsive."
       opt :to, "List URLs that link to the given URL.", :type => :string
       opt :from, "List URLs that the given URL links to.", :type => :string
@@ -117,9 +117,10 @@ class Database
     if opts[:response_time]
       urls = @urls.where{ response_time > opts[:response_time] }
       urls.each { |x| puts "#{ x[:url] } | #{ x[:response_time] }"}
-      # @urls.each { |x| puts x[:response_time] }
-      # Time.parse(x[:response_time])
     end
+
+    # List unresponsive
+    if opts[:unresponsive] then @urls.where{ status > 500 }.each { |x| puts "#{x[:url] } => #{ x[:status] }" } end
   end
 
   def create_config
