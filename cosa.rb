@@ -131,6 +131,9 @@ class Database
       end
     end
 
+    # List age
+    if opts[:age] then @urls.where{ accessed < Time.parse(opts[:age]) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }" } end
+
   end
 
   def create_config
