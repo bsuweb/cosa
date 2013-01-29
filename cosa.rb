@@ -121,6 +121,16 @@ class Database
 
     # List unresponsive
     if opts[:unresponsive] then @urls.where{ status > 500 }.each { |x| puts "#{x[:url] } => #{ x[:status] }" } end
+
+    # List broken links
+    if opts[:broken]
+      @urls.where(:status => 404).each do |bad_link|
+        puts "BAD LINK: #{ bad_link[:url] } LINKED TO BY:\n"
+        @links.where(:to_url => bad_link[:url]).each { |x| puts "#{ x[:from_url] }" }
+        puts "\n"
+      end
+    end
+
   end
 
   def create_config
