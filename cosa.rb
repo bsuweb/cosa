@@ -23,15 +23,15 @@ class Database
       tools and reports.
 
       Usage:
-        ruby cosa.rb http://www.example.com
+        ruby cosa.rb http://www.example.com [-options]
           - Cosa will start at this address, and crawl every page on the site.
 
-        ruby cosa.rb http://www.example.com/directory/ /directory/page/
+        ruby cosa.rb http://www.example.com/directory/ /directory/page/ [-options]
           - Cosa will start at 'http://www.example.com/directory/', and then
             only add links to the queue if they contain the pattern
             'http://www.example.com/directory/page'.
 
-        ruby cosa.rb
+        ruby cosa.rb [-options]
           - If you have already run Cosa, this will check the first link in the
             urls table and see if it has been crawled within the shelf time
             (default 1 day). If it hasn't, that URL will be added to the
@@ -44,7 +44,7 @@ class Database
       opt :init, "Command-line tool for creating and saving a config file"
       opt :add, "Add a URL to the queue", :type => :strings
       opt :config, "If not specified, Cosa will use the default config if it exists", :type => :string
-      # opt :crawl, "Start the crawler. Optional switches for silent or verbose output.", :type => :string
+      opt :crawl, "Start the crawler. Optional switches for silent or verbose output.", :type => :strings
       opt :broken, "List all URLs that contain broken links and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
       opt :invalid_html, "List pages with invalid html."
@@ -115,9 +115,7 @@ class Database
 
     # List response time
     if opts[:response_time]
-      urls = @urls.where{ response_time > opts[:response_time] }
-      urls.each { |x| puts "#{ x[:url] } | #{ x[:response_time] }"}
-    end
+      urls = @urls.where{ response_time > opts[:response_time] }.each { |x| puts "#{ x[:url] } | #{ x[:response_time] }"} end
 
     # List unresponsive
     if opts[:unresponsive] then @urls.where{ status > 500 }.each { |x| puts "#{x[:url] } => #{ x[:status] }" } end
@@ -133,6 +131,21 @@ class Database
 
     # List age
     if opts[:age] then @urls.where{ accessed < Time.parse(opts[:age]) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }" } end
+
+    # Start Crawling
+    if opts[:crawl]
+      if opts[:crawl].length == 1
+      # 1 Argument, gets the url to add to the queue.
+        insert_data_into(@queue, [ opts[:crawl],'', 1 ])
+      elsif opts[:crawl].length == 2
+      # 2 Arguments, gets the url to add to the queue and the pattern to use
+      # when checking pages.
+      pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
+      insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1 ])
+      else
+
+      end
+    end
 
   end
 
@@ -454,22 +467,22 @@ end
 
 crawler = Database.new()
 
-if ARGV.length < 1
-  # No Arguments, check each url in the urls table and add old urls to the
-  # queue to be checked again.
-  # crawler.seed
-  Process.exit
-elsif ARGV.length > 1
-  # 2 Arguments, gets the url to add to the queue and the pattern to use when
-  # checking pages.
-  options = { :url => ARGV.shift, :pattern => ARGV.shift }
-  options[:pattern] = URI.join( options[:url], options[:pattern] ).to_s
-  crawler.insert_data_into(crawler.queue, [ options[:url], options[:pattern], 1 ])
-else
-  # 1 Argument, gets the url to add to the queue.
-  options = { :url => ARGV.shift, :pattern => ARGV.shift }
-  crawler.insert_data_into(crawler.queue, [ options[:url], '', 1 ])
-end
+# if ARGV.length < 1
+#   # No Arguments, check each url in the urls table and add old urls to the
+#   # queue to be checked again.
+#   # crawler.seed
+#   Process.exit
+# elsif ARGV.length > 1
+#   # 2 Arguments, gets the url to add to the queue and the pattern to use when
+#   # checking pages.
+#   options = { :url => ARGV.shift, :pattern => ARGV.shift }
+#   options[:pattern] = URI.join( options[:url], options[:pattern] ).to_s
+#   crawler.insert_data_into(crawler.queue, [ options[:url], options[:pattern], 1 ])
+# else
+#   # 1 Argument, gets the url to add to the queue.
+#   options = { :url => ARGV.shift, :pattern => ARGV.shift }
+#   crawler.insert_data_into(crawler.queue, [ options[:url], '', 1 ])
+# end
 
 # Check the next item in the queue as long as the queue is not empty
 while true
