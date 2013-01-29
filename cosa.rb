@@ -98,7 +98,7 @@ class Database
     if opts[:queue] then queue.each { |x| puts x[:url] } end
 
     # Add to Queue
-    if opts[:add] then insert_data_into(queue, [ opts[:add], '', 1 ]) end
+    if opts[:add] then opts[:add].each { |x| insert_data_into(queue, [ x, '', 1 ]) } end
 
     # List CSS
     if opts[:css]
