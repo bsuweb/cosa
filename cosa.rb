@@ -10,6 +10,10 @@ class String
   def numeric?
     !self.match(/[^0-9]/)
   end
+
+  def alpha?
+    !self.match(/[^A-z]+$/)
+  end
 end
 
 class Database
@@ -67,12 +71,18 @@ class Database
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
     if opts[:config]
-      config = YAML::load( File.open(opts[:config]) )
-    elsif File.exists?('config.yaml')
-        config = YAML::load( File.open('config.yaml') )
+      # Use the given config file if it exists, otherwise create one
+      if File.exists?(opts[:config])
+        config = YAML::load(File.open(opts[:config]))
+      else
+        config = YAML::load(File.open(create_config))
+      end
+    # Else load the default config file
     else
-      # create_config
+      config = YAML::load(File.open('config.yaml'))
     end
+
+    if opts[:init] then config = YAML::load(File.open(create_config)) end
 
     @db = Sequel.connect(config['db_path'])
     @urls = db[:urls]
@@ -143,8 +153,9 @@ class Database
       pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
       insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1 ])
       else
-
       end
+    else
+      Process.exit
     end
 
   end
@@ -154,7 +165,8 @@ class Database
               "No config file given, or exists. Would you like to create one? (y/n) ",
               "Enter the base domain to be crawled. (ex: http://www.example.com) ",
               "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
-              "Enter a path for the database (leave blank for default) "
+              "Enter the absolute path for the database (leave blank for default) ",
+              "Enter the name of your config file:"
               ]
 
     puts strings[0]
@@ -163,10 +175,17 @@ class Database
       puts strings[1]
       domain = $stdin.gets.chomp.downcase
       puts strings[2]
-      shelf = $sdtin.gets.chomp
+      shelf = $stdin.gets.chomp
       puts strings[3]
-      db_path = $sdtin.gets.chomp.downcase
+      db_path = $stdin.gets.chomp.downcase
+      puts strings[4]
+      name = $stdin.gets.chomp
+
+      config_file = File.open(name, "w")
+      config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf }\n\n# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: #{ db_path }")
+      config_file.close
     end
+    return name
   end
 
   # For each page in the urls table, see if the page has been
@@ -466,23 +485,6 @@ class Database
 end
 
 crawler = Database.new()
-
-# if ARGV.length < 1
-#   # No Arguments, check each url in the urls table and add old urls to the
-#   # queue to be checked again.
-#   # crawler.seed
-#   Process.exit
-# elsif ARGV.length > 1
-#   # 2 Arguments, gets the url to add to the queue and the pattern to use when
-#   # checking pages.
-#   options = { :url => ARGV.shift, :pattern => ARGV.shift }
-#   options[:pattern] = URI.join( options[:url], options[:pattern] ).to_s
-#   crawler.insert_data_into(crawler.queue, [ options[:url], options[:pattern], 1 ])
-# else
-#   # 1 Argument, gets the url to add to the queue.
-#   options = { :url => ARGV.shift, :pattern => ARGV.shift }
-#   crawler.insert_data_into(crawler.queue, [ options[:url], '', 1 ])
-# end
 
 # Check the next item in the queue as long as the queue is not empty
 while true
