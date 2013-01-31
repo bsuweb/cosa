@@ -27,14 +27,15 @@ class Database
       tools and reports.
 
       Usage:
-        ruby cosa.rb http://www.example.com [-options]
+        ruby cosa.rb -w http://www.example.com [-options]
           - Cosa will start at this address, and crawl every page on the site.
 
-        ruby cosa.rb http://www.example.com/directory/ /directory/page/ [-options]
+        ruby cosa.rb -w http://www.example.com/directory/ /directory/page/ [-options]
           - Cosa will start at 'http://www.example.com/directory/', and then
             only add links to the queue if they contain the pattern
             'http://www.example.com/directory/page'.
 
+        [DEPRECATED]
         ruby cosa.rb [-options]
           - If you have already run Cosa, this will check the first link in the
             urls table and see if it has been crawled within the shelf time
@@ -48,7 +49,7 @@ class Database
       opt :init, "Command-line tool for creating and saving a config file"
       opt :add, "Add a URL to the queue", :type => :strings
       opt :config, "If not specified, Cosa will use the default config if it exists", :type => :string
-      opt :crawl, "Start the crawler. Optional switches for silent or verbose output.", :type => :strings
+      opt :crawl, "Start the crawler.", :type => :strings
       opt :broken, "List all URLs that contain broken links and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
       opt :invalid_html, "List pages with invalid html."
@@ -64,6 +65,14 @@ class Database
       opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given path.", :type => :string, :short => "-o"
       opt :verbose, "Verbose output.", :short => "-v"
     end
+
+    # Make sure :age date is valid
+    if opts[:age] then Trollop::die :age, "Date must be in the form of yyyy-mm-dd" unless opts[:age].to_s.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/) end
+
+    # Make sure the given config file ends in .yaml
+    # May change to check if the given name when appended with .yaml is valid
+    if opts[:config] then Trollop::die :config, "Config file must end in .yaml" unless opts[:config].to_s.match(/.yaml$/) end
+
   set_opts(opts)
   end
 
@@ -166,24 +175,33 @@ class Database
               "Enter the base domain to be crawled. (ex: http://www.example.com) ",
               "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
               "Enter the absolute path for the database (leave blank for default) ",
+              "For example: Users/username/Documents/cosa/data/database.sqlite",
               "Enter the name of your config file:"
               ]
 
+    # Ask to create new config
     puts strings[0]
     ans = $stdin.gets[0,1].chomp.downcase
     if ans == 'y'
+      # Enter the base domain
       puts strings[1]
       domain = $stdin.gets.chomp.downcase
-      puts strings[2]
-      shelf = $stdin.gets.chomp
-      puts strings[3]
+      while true
+        # Get the shelf life, check to make sure it is an integer
+        puts strings[2]
+        shelf = $stdin.gets.chomp
+        if shelf.numeric? then break else puts "Please enter an integer." end
+      end
+      puts "#{ strings[3] }\n#{ strings[4] }"
       db_path = $stdin.gets.chomp.downcase
-      puts strings[4]
+      puts strings[5]
       name = $stdin.gets.chomp
 
       config_file = File.open(name, "w")
-      config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf }\n\n# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: #{ db_path }")
+      config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf.to_i * 3600 }\n\n# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: #{ db_path }")
       config_file.close
+    else
+      Process.exit
     end
     return name
   end
