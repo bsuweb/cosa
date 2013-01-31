@@ -22,6 +22,10 @@ Cosa relies on the following ruby gems.
 * [Nokogiri](http://nokogiri.org/), an HTML parser
 
         gem install nokogiri
+        
+* [Trollop](http://trollop.rubyforge.org/), a command line option parser.
+
+        gem install trollop
 
 If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutorials/installing_nokogiri.html).
 
