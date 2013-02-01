@@ -2,8 +2,6 @@ require 'sequel'
 require 'yaml'
 require 'uri'
 require 'trollop'
-# require './cosa_new'
-# require './cli'
 
 class Database
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output
@@ -82,7 +80,7 @@ class Database
     # List age
     if opts[:age] then @urls.where{ accessed < Time.parse(opts[:age]) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }" } end
 
-    # Start Crawling
+    # Crawl opt set, start crawling
     if opts[:crawl]
       if opts[:crawl].length == 1
       # 1 Argument, gets the url to add to the queue.
@@ -106,7 +104,9 @@ class Database
               "Enter the base domain to be crawled. (ex: http://www.example.com) ",
               "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
               "Enter the absolute path for the database (leave blank for default) ",
-              "Example: Users/username/Documents/cosa/data/database.sqlite",
+              "Example: /Users/username/Documents/cosa/data/",
+              "Enter the name of your database",
+              "Example: webcrawler.sqlite",
               "Enter the name of your config file:"
               ]
 
@@ -124,10 +124,24 @@ class Database
         if shelf.numeric? then break else puts "Please enter an integer." end
       end
       # Get the path of the database
-      puts "#{ strings[3] }\n#{ strings[4] }"
-      db_path = $stdin.gets.chomp.downcase
+      while true
+        puts "#{ strings[3] }\n#{ strings[4] }"
+        db_path = $stdin.gets.chomp.downcase
+        if File.directory?("#{db_path}")
+          # Get the name of the database you want to create/use
+          puts "#{ strings[5] }\n#{ strings[6] }"
+          db_file = $stdin.gets.chomp.downcase
+          full_path = "#{ db_path }#{ db_file }"
+          # Create DB if it does not exist
+          unless File.exists?(full_path) then create_db(full_path) end
+          db_path = "sqlite://#{ full_path }"
+          break
+        else
+          puts "Please enter a valid path."
+        end
+      end
       # Get new file name
-      puts strings[5]
+      puts strings[7]
       name = $stdin.gets.chomp
 
       config_file = File.open(name, "w")
@@ -138,4 +152,33 @@ class Database
     end
     return name
   end
+
+  def create_db(path)
+    puts "creating db"
+    new_db = Sequel.connect("sqlite://#{ path }")
+    new_db.create_table :queue do
+      primary_key :id
+      String :url
+      String :pattern
+      Integer :force
+    end
+    new_db.create_table :urls do
+      String :url
+      String :accessed
+      String :content_type
+      Integer :content_length
+      String :status
+      String :response
+      Float :response_time
+      String :validation_type
+      Integer :valid
+    end
+    new_db.create_table :links do
+      String :from_url
+      String :to_url
+      String :type
+    end
+    new_db.disconnect
+  end
+
 end
