@@ -1,7 +1,5 @@
-require 'uri'
 require 'trollop'
 require './options'
-# require './cosa_new'
 
 class Database
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output
