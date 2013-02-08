@@ -4,7 +4,7 @@ require 'uri'
 require 'trollop'
 
 class Database
-  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output
+  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
   def set_opts(opts)
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
@@ -22,7 +22,13 @@ class Database
 
     if opts[:init] then config = YAML::load(File.open(create_config)) end
 
-    @db = Sequel.connect(config['db_path'])
+    if config['db_path']
+      @db = Sequel.connect(config['db_path'])
+    else
+      @db = Sequel.connect(:adapter => 'mysql', :user => config['user'], :socket => config['sock'], :database => config['name'], :password => config['pass'])
+    end
+    @crawled = 0
+    @avg_response = 0
     @urls = db[:urls]
     @links = db[:links]
     @queue = db[:queue]
@@ -99,63 +105,103 @@ class Database
   end
 
   def create_config
-    strings = [
+    strings =[
               "No config file given, or exists. Would you like to create one? (y/n) ",
               "Enter the base domain to be crawled. (ex: http://www.example.com) ",
-              "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
-              "Enter the absolute path for the database (leave blank for default) ",
-              "Example: /Users/username/Documents/cosa/data/",
-              "Enter the name of your database",
-              "Example: webcrawler.sqlite",
-              "Enter the name of your config file:"
-              ]
+               "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
+               "What type of database would you like to use?\nmysql or sqlite?",
+               "Please enter either 'mysql' or 'sqlite'",
+               "Username: ",
+               "Password: ",
+               "Enter the Socket path\nExample: /Applications/MAMP/tmp/mysql/mysql.sock",
+               "Enter the absolute path for the database (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ ",
+               "Please enter a valid path",
+               "Enter the name of your database: ",
+               "Enter the name of your config file: ",
+             ]
 
     # Ask to create new config
     puts strings[0]
     ans = $stdin.gets[0,1].chomp.downcase
-    if ans == 'y'
-      # Enter the base domain
-      puts strings[1]
-      domain = $stdin.gets.chomp.downcase
-      while true
-        # Get the shelf life, check to make sure it is an integer
-        puts strings[2]
-        shelf = $stdin.gets.chomp
-        if shelf.numeric? then break else puts "Please enter an integer." end
-      end
-      # Get the path of the database
-      while true
-        puts "#{ strings[3] }\n#{ strings[4] }"
+    unless ans == 'y' then Process.exit end
+
+    # Enter the base domain
+    puts strings[1]
+    domain = $stdin.gets.chomp.downcase
+
+    while true
+      # Get the shelf life, check to make sure it is an integer
+      puts strings[2]
+      shelf = $stdin.gets.chomp
+      if shelf.numeric? then break else puts "Please enter an integer." end
+    end
+
+    # Ask for database type
+    puts strings[3]
+    type = $stdin.gets.chomp.downcase
+
+    # Ask for database name
+    puts strings[10]
+    db_name = $stdin.gets.chomp
+
+    while true
+      if type == 'mysql'
+        puts strings[5]
+        user = $stdin.gets.chomp
+        puts strings[6]
+        pass = $stdin.gets.chomp
+        puts strings[7]
+        sock = $stdin.gets.chomp
+        break
+      elsif type == 'sqlite'
+        # Get DB path, and check if it is a valid path
+        puts strings[8]
         db_path = $stdin.gets.chomp.downcase
-        if File.directory?("#{db_path}")
-          # Get the name of the database you want to create/use
-          puts "#{ strings[5] }\n#{ strings[6] }"
-          db_file = $stdin.gets.chomp.downcase
-          full_path = "#{ db_path }#{ db_file }"
-          # Create DB if it does not exist
-          unless File.exists?(full_path) then create_db(full_path) end
-          db_path = "sqlite://#{ full_path }"
+        if File.directory?("#{ db_path }")
           break
         else
-          puts "Please enter a valid path."
+          puts strings[9]
         end
+      else
+        puts strings[4]
       end
-      # Get new file name
-      puts strings[7]
-      name = $stdin.gets.chomp
-
-      config_file = File.open(name, "w")
-      config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf.to_i * 3600 }\n\n# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: #{ db_path }")
-      config_file.close
-    else
-      Process.exit
     end
-    return name
+
+    # Enter the new config file name
+    puts strings[11]
+    config_name = $stdin.gets.chomp
+
+    # Call create_db
+    if type == "mysql"
+      create_db(type, user, pass, sock, db_name)
+    elsif type == "sqlite"
+      create_db(type, nil, nil, nil, "#{ db_path }#{ db_name }")
+    end
+
+    # Create Config file
+    config_file = File.open(config_name, 'w')
+    config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf.to_i * 3600 }\n\n")
+
+    if type == 'mysql'
+      config_file.puts("# mysql db name, username, password and socket path\nname: #{ db_name }\nuser: #{ user }\npass: #{ pass }\nsock: #{ sock }")
+    elsif type == 'sqlite'
+      config_file.puts("# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: sqlite://#{ db_path }#{ db_name }")
+    end
+
+    config_file.close
+    return config_name
   end
 
-  def create_db(path)
+
+  def create_db(type, user, pass, sock, path)
     puts "creating db"
-    new_db = Sequel.connect("sqlite://#{ path }")
+    if type == 'mysql'
+      new_db = Sequel.connect(:adapter => 'mysql', :user => 'root', :socket => '/Applications/MAMP/tmp/mysql/mysql.sock', :database => 'test', :password => 'root')
+
+    else
+      new_db = Sequel.connect("sqlite://#{ path }")
+    end
+
     new_db.create_table :queue do
       primary_key :id
       String :url
@@ -163,19 +209,19 @@ class Database
       Integer :force
     end
     new_db.create_table :urls do
-      String :url
+      String :url, :text=>true
       String :accessed
       String :content_type
       Integer :content_length
       String :status
-      String :response
+      String :response, :text=>true
       Float :response_time
       String :validation_type
       Integer :valid
     end
     new_db.create_table :links do
-      String :from_url
-      String :to_url
+      String :from_url, :text=>true
+      String :to_url, :text=>true
       String :type
     end
     new_db.disconnect
