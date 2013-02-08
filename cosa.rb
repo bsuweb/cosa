@@ -18,7 +18,8 @@ class String
 end
 
 class Database
-  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output
+  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
+
   # For each page in the urls table, see if the page has been
   # accessed within the seed time. If it has not,add that url to the
   # queue with the pattern set to '' and force set to 0.
@@ -190,8 +191,14 @@ class Database
 
     rec = urls.where(:url => url)
 
+    if urls[:url => url]
+      rec.update(:accessed => last_accessed, :response => body)
+    else
+      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
+    end
+
     if output == "default"
-      print "\rURL: #{ url } | Queue: #{ queue_id } | Avg Req: 1 | Total: #{ Time.now - start_time } DONE"
+      print "\rURL: #{ url } | Queue: #{ queue_id } | Avg Req: #{ avg_response(response_time) }  | Total: #{ Time.now - start_time } DONE"
       $stdout.flush
     elsif output == "verbose"
       puts "QueueID: #{ queue_id }
@@ -201,12 +208,6 @@ class Database
       Status Code: #{ status }
       Page Reponse Time: #{ response_time }
       Total Time: #{ Time.now - start_time } \n"
-    end
-
-    if urls[:url => url]
-      rec.update(:accessed => last_accessed, :response => body)
-    else
-      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
     end
 
   end
@@ -311,6 +312,12 @@ class Database
       end
     end
     links_array
+  end
+
+  def avg_response(time)
+    @crawled += 1
+    @avg_response += time
+    return @avg_response / @crawled
   end
 
 end
