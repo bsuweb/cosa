@@ -50,7 +50,7 @@ class Database
       crawl_url(row[:id])
     elsif !urls[:url => row[:url]]
       crawl_url(row[:id])
-    elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > SHELF
+    elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @@SHELF
       crawl_url(row[:id])
     end
     # Delete the sequel object from the queue table.
