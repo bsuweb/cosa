@@ -34,19 +34,15 @@ If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutoria
 
 First, rename `sample_config.yaml` to `config.yaml` and modify it to meet your needs.
 
-You have three options when running Cosa:
-
-        ruby cosa.rb http://www.example.com
+You have two options when running Cosa.
         
-Cosa will start at this address, and crawl every page on the site.
+        ruby cosa.rb -w http://www.example.com [-options]
 
-        ruby cosa.rb http://www.example.com/directory/ /directory/page/
-        
-Cosa will start at `http://www.example.com/directory/`, and then only add links to the queue if they contain the pattern `http://www.example.com/directory/page/`
+Cosa will start at this address and crawl every page on the site.
 
-        ruby cosa.rb
+        ruby cosa.rb -w http://www.example.com/directory/ /directory/page/ [-options]
         
-If you have already run Cosa, this will check the first link in the urls table and see if it has been crawled within the shelf time (default 1 day). If it hasn't, that URL will be added to the queue and the URL will be recrawled.
+Cosa will start at 'http://www.example.com/directory/', and then only add links to the queue if they contain the pattern 'http://www.example.com/directory/page/'.
 
 Because Cosa stores the queue in the database, you can quit the program at any time and when you restart it will begin where it left off.
 
@@ -58,8 +54,35 @@ Cosa uses a simple database with the following three tables:
 * `links` – stores the relationship between URL's. Once the crawl is complete, you can query this table to determine all URL's a given URL links to, and all URL's that link to a given URL.
 * `queue` working list of URL's that need to be crawled.
 
+## Help
 
-Currently Cosa only supports SQLite although support for MySQL is planned. 
+```
+Usage: ruby cosa.rb [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
+                    [-w starting_url] OR [-w starting_url pattern]
+                    [-a url_one url_two] [-c config_file] 
+                    [-g date] [-r seconds] [-t URL] [-f URL]
+
+Options:
+--init, -i              : Command-line tool for creating and saving a config file.
+--add, -a <s+>          : Add a URL (or multiple URLs, separated by spaces) to the queue.
+--config, -c <s>        : Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists.
+--crawl, -w  <s+>       : Start the crawler. Look above for examples of usage.
+--broken, -b            : List all URLs that contain broken links, and their broken links.
+--css, s                : List all CSS URLs that are linked to.
+--age, -g <s>           : List all URLs that are older than the given date.
+--queue, -q             : List all URLs in the queue.
+--clear-queue, -e       : Empty the queue.
+--response-time, -r <f> : List all URLs that took longer than <seconds> to respond.
+--unresponsive, -u      : List all URLs that were not responsive.
+--to, -t <s>            : List all URLs that link to the given URL.
+--from, -f <s>          : List all URLs that the given URL links to.
+--silent, -S            : Silence all output.
+--verbose, -V           : Verbose output.
+--version, -v           : Print version and exit.
+--help, -h              : Show this message.
+```
+
+Cosa currently supports SQLite and MySQL. 
 
 ## Juan de la Cosa
 
