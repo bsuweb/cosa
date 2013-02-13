@@ -98,7 +98,28 @@ Copyright (C) 2012-2013 Bemidji State University
 
 ## Changelog
 
-* [v0.1 (2013-01-09)](https://github.com/bsuweb/cosa/tree/v0.1)
+[v0.2 (2013-02-13)](#)
+ * Cosa now stores a response time for each url.
+ * Slight performance increases.
+ * Restructured files
+ * Added mysql support
+ * Added Command Line Interface with support for:
+  * List all queue items 
+  * List all CSS files
+  * List all urls that a given page links to
+  * List all urls that link to a given url
+  * List all urls that took longer than a given time to respond
+  * List al unresponsive urls
+  * List all broken links
+  * List all urls that were crawled prior to a given date
+  * Clear the queue
+  * Add items to queue
+  * Can supply a custom configuration file
+  * Default/Silent/Verbose output
+
+ 
+
+[v0.1 (2013-01-09)](https://github.com/bsuweb/cosa/tree/v0.1)
  * Crawls a given webpage, and any connected pages. 
  * Crawls a given webpage, and any connected pages matching a given pattern.
  * Re-crawls a site if it has bot been crawled within a given time.
