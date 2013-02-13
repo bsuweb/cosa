@@ -196,7 +196,7 @@ class Database
   def create_db(type, user, pass, sock, path)
     puts "creating db"
     if type == 'mysql'
-      new_db = Sequel.connect(:adapter => 'mysql', :user => 'root', :socket => '/Applications/MAMP/tmp/mysql/mysql.sock', :database => 'test', :password => 'root')
+      new_db = Sequel.connect(:adapter => 'mysql', :user => user, :socket => sock, :database => path, :password => pass)
 
     else
       new_db = Sequel.connect("sqlite://#{ path }")
@@ -207,6 +207,7 @@ class Database
       String :url
       String :pattern
       Integer :force
+      #Integer :in_use, :default => 0
     end
     new_db.create_table :urls do
       String :url, :text=>true
