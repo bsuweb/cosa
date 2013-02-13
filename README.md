@@ -98,7 +98,7 @@ Copyright (C) 2012-2013 Bemidji State University
 
 ## Changelog
 
-[v0.2 (2013-02-13)](#)
+[v0.2 (2013-02-13)](https://github.com/bsuweb/cosa/tree/v0.2)
  * Cosa now stores a response time for each url.
  * Slight performance increases.
  * Restructured files
