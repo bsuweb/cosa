@@ -6,7 +6,7 @@ class Database
 
   def initialize
     opts = Trollop::options do
-      version " Cosa 0.1"
+      version " Cosa 0.2"
       banner <<-EOS
       Cosa is a simple web crawler that generates a database for use by other
       tools and reports.
