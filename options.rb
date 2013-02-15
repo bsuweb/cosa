@@ -89,13 +89,15 @@ class Database
     # Crawl opt set, start crawling
     if opts[:crawl]
       if opts[:crawl].length == 1
-      # 1 Argument, gets the url to add to the queue.
-        insert_data_into(@queue, [ opts[:crawl],'', 1 ])
+        unless opts[:crawl] == "res"
+          # 1 Argument, gets the url to add to the queue.
+          insert_data_into(@queue, [ opts[:crawl],'', 1 ])
+        end
       elsif opts[:crawl].length == 2
-      # 2 Arguments, gets the url to add to the queue and the pattern to use
-      # when checking pages.
-      pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
-      insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1 ])
+        # 2 Arguments, gets the url to add to the queue and the pattern to use
+        # when checking pages.
+        pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
+        insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1 ])
       else
       end
     else
@@ -114,7 +116,7 @@ class Database
                "Username: ",
                "Password: ",
                "Enter the Socket path\nExample: /Applications/MAMP/tmp/mysql/mysql.sock",
-               "Enter the absolute path for the database (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ ",
+               "Enter the absolute path for the database directory (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ ",
                "Please enter a valid path",
                "Enter the name of your database: ",
                "Enter the name of your config file: ",
@@ -157,6 +159,7 @@ class Database
         # Get DB path, and check if it is a valid path
         puts strings[8]
         db_path = $stdin.gets.chomp.downcase
+        if db_path == '' then db_path = "#{ Dir.getwd }/" end
         if File.directory?("#{ db_path }")
           break
         else
@@ -207,7 +210,7 @@ class Database
       String :url
       String :pattern
       Integer :force
-      #Integer :in_use, :default => 0
+      Integer :in_use, :default => 0
     end
     new_db.create_table :urls do
       String :url, :text=>true
