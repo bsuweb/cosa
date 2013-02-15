@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'nokogiri'
 require 'typhoeus'
 require 'sequel'
@@ -42,19 +43,23 @@ class Database
     # Get the first item in the queue table. Variable 'row' gets that value.
     row = queue.first
 
-    # If the force column in the sequel object is set to true crawl the page.
-    # Elsif the url of the sequel object is not in the urls table crawl the page.
-    # Elsif the sequel object is in the urls table, but has not been accessed
-    # within the shelf time crawl the page.
-    if row[:force] == 1
-      crawl_url(row[:id])
-    elsif !urls[:url => row[:url]]
-      crawl_url(row[:id])
-    elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @@SHELF
-      crawl_url(row[:id])
+    unless row[:in_use] == 1
+      row.update(:in_use => 1)
+      # If the force column in the sequel object is set to true crawl the page.
+      # Elsif the url of the sequel object is not in the urls table crawl the page.
+      # Elsif the sequel object is in the urls table, but has not been accessed
+      # within the shelf time crawl the page.
+      if row[:force] == 1
+        crawl_url(row[:id])
+      elsif !urls[:url => row[:url]]
+        crawl_url(row[:id])
+      elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @@SHELF
+        crawl_url(row[:id])
+      end
+      # Delete the sequel object from the queue table.
+      queue.where(:id => row[:id]).delete
     end
-    # Delete the sequel object from the queue table.
-    queue.where(:id => row[:id]).delete
+
   end
 
   def crawl_url(queue_id)
@@ -171,12 +176,12 @@ class Database
           # If the current url's pattern field is blank, add this item from
           # new_links to the queue with a blank pattern and a force value of 0.
           if item[:pattern] == ''
-            insert_data_into(queue, [link, '', 0]) if check_duplicates(link) == true
+            insert_data_into(queue, [link, '', 0, 0]) if check_duplicates(link) == true
 
           # Elsif the pattern is not blank and 'link' matches the pattern, add
           # link to the queue with the same pattern and force value.
           elsif item[:pattern] != '' && link.include?(item[:pattern])
-            insert_data_into(queue, [link, item[:pattern], item[:force]]) if check_duplicates(link) == true
+            insert_data_into(queue, [link, item[:pattern], item[:force], 0]) if check_duplicates(link) == true
           end
         end
       end
@@ -198,7 +203,8 @@ class Database
     end
 
     if output == "default"
-      print "\rURL: #{ url } | Queue: #{ queue_id } | Avg Req: #{ avg_response(response_time) }  | Total: #{ Time.now - start_time } DONE"
+      print "#{ queue_id }: #{ url }\n"
+      print "Remaining: #{ queue.count } | Avg Req: #{ avg_response(response_time) }  | Total: #{ Time.now - start_time }\r"
       $stdout.flush
     elsif output == "verbose"
       puts "QueueID: #{ queue_id }
@@ -220,7 +226,7 @@ class Database
   # values   - Values to be inserted into table
   #
   def insert_data_into(table, values)
-    queue_opts = [:url, :pattern, :force]
+    queue_opts = [:url, :pattern, :force, :in_use]
     links_opts = [:from_url, :to_url, :type]
     urls_opts = [:url, :accessed, :content_type, :content_length, :status, :response, :response_time, :validation_type, :valid]
     data_hash = {}
@@ -317,7 +323,7 @@ class Database
   def avg_response(time)
     @crawled += 1
     @avg_response += time
-    return @avg_response / @crawled
+    return (@avg_response / @crawled).round(3)
   end
 
 end
