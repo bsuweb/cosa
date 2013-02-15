@@ -135,6 +135,7 @@ class Database
       # Get the shelf life, check to make sure it is an integer
       puts strings[2]
       shelf = $stdin.gets.chomp
+      if shelf == '' then shelf = "24" end
       if shelf.numeric? then break else puts "Please enter an integer." end
     end
 
