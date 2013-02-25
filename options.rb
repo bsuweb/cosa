@@ -77,9 +77,19 @@ class Database
     # List broken links
     if opts[:broken]
       @urls.where(:status => 404).each do |bad_link|
-        puts "BAD LINK: #{ bad_link[:url] } LINKED TO BY:\n"
+        puts "BAD LINK: #{ bad_link[:url] }\nLINKED TO BY:\n"
         @links.where(:to_url => bad_link[:url]).each { |x| puts "#{ x[:from_url] }" }
         puts "\n"
+      end
+    end
+
+    # List abandoned links
+    if opts[:abandoned]
+      puts "Abandoned links:"
+      @urls[:url].each do |link|
+        unless @links[:to_url => link]
+          puts link
+        end
       end
     end
 
@@ -91,14 +101,13 @@ class Database
       if opts[:crawl].length == 1
         unless opts[:crawl] == "res"
           # 1 Argument, gets the url to add to the queue.
-          insert_data_into(@queue, [ opts[:crawl],'', 1 ])
+          insert_data_into(@queue, [ opts[:crawl],'', 1, 0 ])
         end
       elsif opts[:crawl].length == 2
         # 2 Arguments, gets the url to add to the queue and the pattern to use
         # when checking pages.
         pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
-        insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1 ])
-      else
+        insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1, 0 ])
       end
     else
       Process.exit
