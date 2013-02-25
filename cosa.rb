@@ -43,27 +43,34 @@ class Database
     # Get the first item in the queue table. Variable 'row' gets that value.
     row = queue.first
 
-    unless row[:in_use] == 1
-      row.update(:in_use => 1)
-      # If the force column in the sequel object is set to true crawl the page.
-      # Elsif the url of the sequel object is not in the urls table crawl the page.
-      # Elsif the sequel object is in the urls table, but has not been accessed
-      # within the shelf time crawl the page.
-      if row[:force] == 1
-        crawl_url(row[:id])
-      elsif !urls[:url => row[:url]]
-        crawl_url(row[:id])
-      elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @@SHELF
-        crawl_url(row[:id])
+    if row[:in_use] == 1
+      id = row[:id]
+      row = queue.where(:in_use => 0).limit(1).first
+      if row.nil?
+        row = queue.where(:id => id += 1, :in_use => 0).limit(1).first
       end
-      # Delete the sequel object from the queue table.
-      queue.where(:id => row[:id]).delete
     end
+    queue.where(:id => row[:id]).update(:in_use => 1)
+
+    # If the force column in the sequel object is set to true crawl the page.
+    # Elsif the url of the sequel object is not in the urls table crawl the page.
+    # Elsif the sequel object is in the urls table, but has not been accessed
+    # within the shelf time crawl the page.
+    if row[:force] == 1
+      crawl_url(row[:id])
+    elsif !urls[:url => row[:url]]
+      crawl_url(row[:id])
+    elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @@SHELF
+      crawl_url(row[:id])
+    end
+    # Delete the sequel object from the queue table.
+    queue.where(:id => row[:id]).delete
+
 
   end
 
   def crawl_url(queue_id)
-
+    # item = queue.where(:id => queue_id)
     item = queue[:id => queue_id]
     url = item[:url]
     last_accessed = Time.now
@@ -81,7 +88,7 @@ class Database
     response = Typhoeus::Request.get(url,
                                     :timeout => 30000,
                                     :headers => {
-                                      'User-Agent' => "Cosa/0.1 ()"
+                                      'User-Agent' => "Cosa/0.2 ()"
                                     })
     url = response.effective_url
     response_time = response.total_time.round(6)
@@ -196,15 +203,9 @@ class Database
 
     rec = urls.where(:url => url)
 
-    if urls[:url => url]
-      rec.update(:accessed => last_accessed, :response => body)
-    else
-      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
-    end
-
     if output == "default"
-      print "#{ queue_id }: #{ url }\n"
-      print "Remaining: #{ queue.count } | Avg Req: #{ avg_response(response_time) }  | Total: #{ Time.now - start_time }\r"
+      print "#{ queue_id }: #{ url } \n"
+      print "Remaining: #{ queue.count } | Avg Req: #{ avg_response(response_time) }  | Total time: #{ (Time.now - start_time).round(2) }\r"
       $stdout.flush
     elsif output == "verbose"
       puts "QueueID: #{ queue_id }
@@ -214,6 +215,12 @@ class Database
       Status Code: #{ status }
       Page Reponse Time: #{ response_time }
       Total Time: #{ Time.now - start_time } \n"
+    end
+
+    if urls[:url => url]
+      rec.update(:accessed => last_accessed, :response => body)
+    else
+      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
     end
 
   end
