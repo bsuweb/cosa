@@ -22,6 +22,11 @@ end
 class Database
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
 
+  def on_start
+    to_crawl = queue.where(:in_use => 1)
+    to_crawl.each { |item| queue.where(:id => item[:id]).update(:in_use => 0) }
+  end
+
   # For each page in the urls table, see if the page has been
   # accessed within the seed time. If it has not,add that url to the
   # queue with the pattern set to '' and force set to 0.
@@ -71,7 +76,6 @@ class Database
   end
 
   def crawl_url(queue_id)
-    # item = queue.where(:id => queue_id)
     item = queue[:id => queue_id]
     url = item[:url]
     last_accessed = Time.now
@@ -80,7 +84,7 @@ class Database
     type_array = []
 
     if url.include?('http') && !url.include?(domain)
-      #url is external, url = url
+      # url is external, url = url
       internal = false
     elsif url[-1, 10] == "index.html"
       url = url[0..-10]
@@ -113,7 +117,7 @@ class Database
       valid = [0, 0]
     else
       valid = valid?(url, content_type)
-      #valid = [1, 1]
+      # valid = [1, 1]
     end
 
     if valid[1] == "html"
@@ -337,6 +341,7 @@ class Database
 end
 
 crawler = Database.new()
+crawler.on_start
 
 # Check the next item in the queue as long as the queue is not empty
 while true
