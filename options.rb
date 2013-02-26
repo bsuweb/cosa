@@ -2,6 +2,7 @@ require 'sequel'
 require 'yaml'
 require 'uri'
 require 'trollop'
+require './snapshot'
 
 class Database
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
@@ -96,6 +97,10 @@ class Database
     # List age
     if opts[:age] then @urls.where{ accessed < Time.parse(opts[:age]) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }" } end
 
+    if opts[:snapshot]
+      snapshot(opts[:snapshot], @domain)
+    end
+
     # Crawl opt set, start crawling
     if opts[:crawl]
       if opts[:crawl].length == 1
@@ -139,6 +144,7 @@ class Database
     # Enter the base domain
     puts strings[1]
     domain = $stdin.gets.chomp.downcase
+    if !domain.include?('http://') then domain = "http://#{ domain }" end
 
     while true
       # Get the shelf life, check to make sure it is an integer
@@ -166,6 +172,7 @@ class Database
         sock = $stdin.gets.chomp
         break
       elsif type == 'sqlite'
+        if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
         # Get DB path, and check if it is a valid path
         puts strings[8]
         db_path = $stdin.gets.chomp.downcase
@@ -183,6 +190,7 @@ class Database
     # Enter the new config file name
     puts strings[11]
     config_name = $stdin.gets.chomp
+    if config_name[-5,5] != ".yaml" then config_name = "#{ config_name }.yaml" end
 
     # Call create_db
     if type == "mysql"
