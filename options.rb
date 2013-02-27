@@ -57,9 +57,7 @@ class Database
 
     # List CSS
     if opts[:css]
-      temp = []
-      @links.where(:type => 'css').each { |x| temp << x[:to_url] }
-      temp.uniq!.each { |y| puts y }
+      @links.where(:type => 'css').group(:to_url).order{max(1)}.each { |x| puts x[:to_url] }
     end
 
     # List to
@@ -121,74 +119,59 @@ class Database
   end
 
   def create_config
-    strings =[
-              "No config file given, or exists. Would you like to create one? (y/n) ",
-              "Enter the base domain to be crawled. (ex: http://www.example.com) ",
-               "Enter a shelf life(time between crawls) in hours. Default is 24 hours. ",
-               "What type of database would you like to use?\nmysql or sqlite?",
-               "Please enter either 'mysql' or 'sqlite'",
-               "Username: ",
-               "Password: ",
-               "Enter the Socket path\nExample: /Applications/MAMP/tmp/mysql/mysql.sock",
-               "Enter the absolute path for the database directory (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ ",
-               "Please enter a valid path",
-               "Enter the name of your database: ",
-               "Enter the name of your config file: ",
-             ]
-
     # Ask to create new config
-    puts strings[0]
+    puts "No config file given, or exists. Would you like to create one? (y/n) "
     ans = $stdin.gets[0,1].chomp.downcase
     unless ans == 'y' then Process.exit end
 
     # Enter the base domain
-    puts strings[1]
+    puts "Enter the base domain to be crawled. (ex: http://www.example.com) "
     domain = $stdin.gets.chomp.downcase
     if !domain.include?('http://') then domain = "http://#{ domain }" end
 
     while true
       # Get the shelf life, check to make sure it is an integer
-      puts strings[2]
+      puts "Enter a shelf life(time between crawls) in hours. Default is 24 hours. "
       shelf = $stdin.gets.chomp
       if shelf == '' then shelf = "24" end
       if shelf.numeric? then break else puts "Please enter an integer." end
     end
 
     # Ask for database type
-    puts strings[3]
+    puts "What type of database would you like to use?\nmysql or sqlite? "
     type = $stdin.gets.chomp.downcase
 
     # Ask for database name
-    puts strings[10]
+    puts "Enter the name of your database: "
     db_name = $stdin.gets.chomp
 
     while true
       if type == 'mysql'
-        puts strings[5]
+        puts "Username: "
         user = $stdin.gets.chomp
-        puts strings[6]
+        puts "Password: "
         pass = $stdin.gets.chomp
-        puts strings[7]
+        puts "Enter the Socket path\nExample: /Applications/MAMP/tmp/mysql/mysql.sock"
         sock = $stdin.gets.chomp
         break
       elsif type == 'sqlite'
         if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
         # Get DB path, and check if it is a valid path
-        puts strings[8]
+        puts "Enter the absolute path for the database directory (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ "
         db_path = $stdin.gets.chomp.downcase
         if db_path == '' then db_path = "#{ Dir.getwd }/" end
         if File.directory?("#{ db_path }")
           break
         else
-          puts strings[9]
+          puts "Please enter a valid path"
         end
       else
-        puts strings[4]
+        puts "Please enter either 'mysql' or 'sqlite'"
       end
     end
 
     # Enter the new config file name
-    puts strings[11]
+    puts "Enter the name of your config file:\nExample: my_conf.yaml "
     config_name = $stdin.gets.chomp
     if config_name[-5,5] != ".yaml" then config_name = "#{ config_name }.yaml" end
 
