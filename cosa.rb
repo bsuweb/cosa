@@ -3,7 +3,6 @@
 require 'nokogiri'
 require 'typhoeus'
 require 'sequel'
-require 'yaml'
 require 'uri'
 require './lib/valid'
 require './cli'
@@ -33,10 +32,7 @@ class Database
   #
   def seed
     to_crawl = urls.where{ accessed < Time.now - @@SHELF }
-    to_crawl.each do |row|
-      insert_data_into_into(queue, [row[:url], '', 0])
-    end
-
+    to_crawl.each { |row| insert_data_into_into(queue, [row[:url], '', 0]) }
     return crawl_queue unless queue.empty?
   end
 
@@ -49,13 +45,11 @@ class Database
     # Get the first item in the queue table. Variable 'row' gets that value.
     row = queue.first
 
+    # If the current row is in use, get the next row that is not in use.
     if row[:in_use] == 1
-      id = row[:id]
       row = queue.where(:in_use => 0).limit(1).first
-      if row.nil?
-        row = queue.where(:id => id += 1, :in_use => 0).limit(1).first
-      end
     end
+    # Set the current row to in use
     queue.where(:id => row[:id]).update(:in_use => 1)
 
     # If the force column in the sequel object is set to true crawl the page.
@@ -71,8 +65,6 @@ class Database
     end
     # Delete the sequel object from the queue table.
     queue.where(:id => row[:id]).delete
-
-
   end
 
   def crawl_url(queue_id)
@@ -166,14 +158,10 @@ class Database
 
         # Find the differences between old_links and parsed_links to determine if
         # any links have been added or removed from the page.
-        new_links = parsed_links - old_links
+        if item[:force] == 1 then new_links = parsed_links else new_links = parsed_links - old_links end
         deleted_links = old_links - parsed_links
 
-        new_links = parsed_links if item[:force] == 1
-
-        deleted_links.each do |link|
-          links.where(:to_url => link).delete
-        end
+        deleted_links.each { |link| links.where(:to_url => link).delete }
 
         new_links = remove_leading(new_links)
         new_links.each do |link|
