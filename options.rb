@@ -85,8 +85,8 @@ class Database
     # List abandoned links
     if opts[:abandoned]
       puts "Abandoned links:"
-      @urls[:url].each do |link|
-        unless @links[:to_url => link]
+      @urls.each do |link|
+        unless @links[:to_url => link[:url]]
           puts link
         end
       end
