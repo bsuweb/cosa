@@ -6,7 +6,7 @@ require './snapshot'
 
 class Database
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
-  def set_opts(opts)
+  def initialize(opts)
     # Load configuration file
     # Used to load the base domain to be crawled, and the path to the database
     if opts[:config]
