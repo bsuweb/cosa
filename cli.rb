@@ -29,7 +29,7 @@ class Database
       opt :config, "Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists", :type => :string
       opt :crawl, "Start the crawler. Look above for examples of usage.", :type => :strings
       opt :broken, "List all URLs that contain broken links, and their broken links."
-      #opt :abandoned, "List all pages that are no longers linked to."
+      opt :abandoned, "List all pages that are no longers linked to."
       #opt :invalid_html, "List pages with invalid html."
       opt :css, "List all CSS URLs that are linked to."
       opt :age, "List all URLs that are older than the given date.", :type => :string
