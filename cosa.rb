@@ -165,7 +165,7 @@ class Database
 
         new_links = remove_leading(new_links)
         new_links.each do |link|
-        type = determine_type(link, type_array)
+          type = determine_type(link, type_array)
 
           # If this item in the new_links array is not in the links table, add it
           # to the links table.
@@ -328,7 +328,7 @@ class Database
 
 end
 
-crawler = Database.new()
+crawler = Database.new(cli)
 crawler.on_start
 
 # Check the next item in the queue as long as the queue is not empty
