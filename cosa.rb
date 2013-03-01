@@ -68,6 +68,7 @@ class Database
   end
 
   def crawl_url(queue_id)
+
     item = queue[:id => queue_id]
     url = item[:url]
     last_accessed = Time.now
@@ -87,7 +88,7 @@ class Database
                                     :headers => {
                                       'User-Agent' => "Cosa/0.2 ()"
                                     })
-    url = response.effective_url
+    url = response.effective_url.downcase
     response_time = response.total_time.round(6)
 
     content_type = response.headers_hash["Content-Type"]
@@ -117,23 +118,31 @@ class Database
 
         # Iterate through the a, link, img, video, audio, script, and object elements on the page.
         Nokogiri::HTML(body).css('a', 'link', 'img', 'video', 'audio', 'script', 'object').each do |item|
+          if item.name == "link"
+            if item.attr('rel') == "stylesheet"
+              type = 'css'
+            else
+              type = 'rss'
+            end
+          else
+            type = item.name
+          end
 
           # If element contains an href attribute, and that is not set to '#' or
           # 'mailto:', or http://, or contains a '@' symbol add that element to
           # the parsed_links array. Also add that element and it's 'tag' to the
           # type_array array.
           if item[:href]
-            if !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
-              insert_links(item, url, :href, parsed_links, type_array)
+            if !item[:href].nil? && !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
+              insert_links(item[:href], url, type, parsed_links, type_array)
             end
-          # Else if the element contains an scr attribute, add it to the
+           # Else if the element contains an scr attribute, add it to the
           # parsed_links array. Also add that element and it's 'tag' to the
           # type_array array.
-          elsif item[:src]
-            if item[:src][0..4] != 'data:'
-              insert_links(item, url, :src, parsed_links, type_array)
-            end
+          elsif item[:src] && item[:src][0..4] != 'data:'
+            insert_links(item[:src], url, type, parsed_links, type_array)
           end
+
         end
 
         type_array.each { |array| array = remove_leading(array) }
@@ -147,7 +156,7 @@ class Database
 
           parsed_links.each do |link|
             type = determine_type(link, type_array)
-            insert_data_into(links, [url, link, type[1]])
+            insert_data_into(links, [url, link, type])
           end
         else
 
@@ -170,7 +179,7 @@ class Database
           # If this item in the new_links array is not in the links table, add it
           # to the links table.
           unless links.where(:from_url => url, :to_url => link)
-            insert_data_into(links, [url, link, type[1]])
+            insert_data_into(links, [url, link, type])
           end
 
           # If the current url's pattern field is blank, add this item from
@@ -254,14 +263,14 @@ class Database
   #
   # item          - Curent page being added
   # url           - Current url
-  # type          - href or src
-  # parsed_links  - array of links on the current url
-  # type_array    - array of links on the current page and their 'types'
+  # type          - Link type (a, css, rss, img, script, video, audio, object)
+  # parsed_links  - Array of links on the current url
+  # type_array    - Array of links on the current page and their 'types'
   #
   def insert_links(item, url, type, parsed_links, type_array)
-    item[type] = URI.join( url, URI.escape(item[type].gsub(/\s+\"|"/, '').strip, "[]()| ") ).to_s
-    parsed_links << item[type]
-    type_array << [item[type], item.name]
+    item = URI.join( url, URI.escape(item.gsub(/\s+\"|"/, '').strip, "[]()| ") ).to_s
+    parsed_links << item
+    type_array << [item, type]
   end
 
   # Additional checking to make sure duplicate links aren't added to the queue.
@@ -292,12 +301,7 @@ class Database
   #
   def determine_type(link, type_array)
     type = type_array.assoc(link)
-    begin
-      type[1] = 'css' if type[1] === 'link'
-    rescue
-      type = ['','']
-    end
-    type
+    type[1]
   end
 
   # Removes the leading '/' or '../' from the links in an array
