@@ -88,7 +88,8 @@ class Database
                                     :headers => {
                                       'User-Agent' => "Cosa/0.2 ()"
                                     })
-    url = response.effective_url.downcase
+    url = response.effective_url
+    url[0..4].downcase
     response_time = response.total_time.round(6)
 
     content_type = response.headers_hash["Content-Type"]
@@ -323,7 +324,7 @@ class Database
       elsif link[0..2] === '../'
         link.replace(link[3, link.length])
       end
-      link.downcase
+      link
     end
     links_array
   end
