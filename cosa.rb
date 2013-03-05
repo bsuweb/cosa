@@ -122,7 +122,7 @@ class Database
             if item.attr('rel') == "stylesheet"
               type = 'css'
             else
-              type = 'rss'
+              type = ''
             end
           else
             type = item.name
@@ -185,12 +185,12 @@ class Database
           # If the current url's pattern field is blank, add this item from
           # new_links to the queue with a blank pattern and a force value of 0.
           if item[:pattern] == ''
-            insert_data_into(queue, [link, '', 0, 0]) if check_duplicates(link) == true
+            if check_duplicates(link) == true then insert_data_into(queue, [link, '', 0, 0]) end
 
           # Elsif the pattern is not blank and 'link' matches the pattern, add
           # link to the queue with the same pattern and force value.
           elsif item[:pattern] != '' && link.include?(item[:pattern])
-            insert_data_into(queue, [link, item[:pattern], item[:force], 0]) if check_duplicates(link) == true
+            if check_duplicates(link) == true then insert_data_into(queue, [link, item[:pattern], item[:force], 0]) end
           end
         end
       end
@@ -216,13 +216,14 @@ class Database
       Content Type: #{ content_type }
       Status Code: #{ status }
       Page Reponse Time: #{ response_time }
-      Total Time: #{ Time.now - start_time } \n"
+      Total Time: #{ Time.now - start_time } \n
+      #{ body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, '') }"
     end
 
     if urls[:url => url]
-      rec.update(:accessed => last_accessed, :response => body)
+      rec.update(:accessed => last_accessed, :response => body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''))
     else
-      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body, response_time, valid[1], valid[0]])
+      insert_data_into(urls, [url, last_accessed, content_type, content_length, status, body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''), response_time, valid[1], valid[0]])
     end
 
   end
@@ -282,11 +283,13 @@ class Database
   # link    - Link being checked
   #
   def check_duplicates(link)
-    unless queue[:url => link] || link == domain + '/'
-      dataset = urls[:url => link]
-      if dataset.nil?
+    if queue[:url => link] || link == domain + '/'
+      false
+    else
+      dataset = urls.where(:url => link).limit(1)
+      if dataset.empty?
         true
-      elsif Time.parse(dataset[:accessed]) < (Time.now - @@SHELF)
+      elsif Time.parse(dataset.first[:accessed]) < (Time.now - @@SHELF)
         true
       else
         false
@@ -320,6 +323,7 @@ class Database
       elsif link[0..2] === '../'
         link.replace(link[3, link.length])
       end
+      link.downcase
     end
     links_array
   end
