@@ -1,8 +1,8 @@
-# Cosa 
+# Cosa
 
-Cosa is a simple web crawler that generates a database for use by other tools and reports. 
+Cosa is a simple web crawler that generates a database for use by other tools and reports.
 
-It starts with a URL and domain name and will parse links returned by that URL, check all links to web pages, images, CSS, and script files. Links to HTML pages on the same domain will be recursively parsed until the queue finishes. Results from each URL and the link structure are contained in the database. 
+It starts with a URL and domain name and will parse links returned by that URL, check all links to web pages, images, CSS, and script files. Links to HTML pages on the same domain will be recursively parsed until the queue finishes. Results from each URL and the link structure are contained in the database.
 
 Cosa will only re-crawl URL's when the shelf life has expired or when specifically requested to re-fetch a URL. The default shelf life is one day, this can be changed in the config.
 
@@ -22,7 +22,7 @@ Cosa relies on the following ruby gems.
 * [Nokogiri](http://nokogiri.org/), an HTML parser
 
         gem install nokogiri
-        
+
 * [Trollop](http://trollop.rubyforge.org/), a command line option parser.
 
         gem install trollop
@@ -35,13 +35,13 @@ If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutoria
 First, rename `sample_config.yaml` to `config.yaml` and modify it to meet your needs.
 
 You have two options when running Cosa.
-        
+
         ruby cosa.rb -w http://www.example.com [-options]
 
 Cosa will start at this address and crawl every page on the site.
 
         ruby cosa.rb -w http://www.example.com/directory/ /directory/page/ [-options]
-        
+
 Cosa will start at 'http://www.example.com/directory/', and then only add links to the queue if they contain the pattern 'http://www.example.com/directory/page/'.
 
 Because Cosa stores the queue in the database, you can quit the program at any time and when you restart it will begin where it left off.
@@ -59,7 +59,7 @@ Cosa uses a simple database with the following three tables:
 ```
 Usage: ruby cosa.rb [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
                     [-w starting_url] OR [-w starting_url pattern]
-                    [-a url_one url_two] [-c config_file] 
+                    [-a url_one url_two] [-c config_file]
                     [-g date] [-r seconds] [-t URL] [-f URL]
 
 Options:
@@ -82,7 +82,7 @@ Options:
 --help, -h              : Show this message.
 ```
 
-Cosa currently supports SQLite and MySQL. 
+Cosa currently supports SQLite and MySQL.
 
 ## Juan de la Cosa
 
@@ -104,7 +104,7 @@ Copyright (C) 2012-2013 Bemidji State University
  * Restructured files
  * Added mysql support
  * Added Command Line Interface with support for:
-  * List all queue items 
+  * List all queue items
   * List all CSS files
   * List all urls that a given page links to
   * List all urls that link to a given url
@@ -117,10 +117,10 @@ Copyright (C) 2012-2013 Bemidji State University
   * Can supply a custom configuration file
   * Default/Silent/Verbose output
 
- 
+
 
 [v0.1 (2013-01-09)](https://github.com/bsuweb/cosa/tree/v0.1)
- * Crawls a given webpage, and any connected pages. 
+ * Crawls a given webpage, and any connected pages.
  * Crawls a given webpage, and any connected pages matching a given pattern.
  * Re-crawls a site if it has bot been crawled within a given time.
  * Stores data from crawled pages in an SQLite database
