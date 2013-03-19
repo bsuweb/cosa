@@ -37,7 +37,7 @@ def cli
     opt :to, "List URLs that link to the given URL.", :type => :string
     opt :from, "List URLs that the given URL links to.", :type => :string
     opt :silent, "Silence all output.", :short => 'S'
-    opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given path.", :type => :string, :short => "-o"
+    opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given full path.", :type => :string, :short => "-o"
     opt :verbose, "Verbose output.", :short => "-V"
   end
 
