@@ -7,10 +7,8 @@ class Snapshot
   # snap = Snapshot.new( {:path => path, :domain => domain, :urls => urls} )
   def initialize(options)
     $LOG = Logger.new("logfile.log")
-    opts = {:path => Dir.pwd,
-            :domain => nil,
-            :urls => nil
-           }.merge(options)
+    opts = {:path => Dir.pwd, :domain => nil, :urls => nil}.merge(options)
+
     if File.exists?(opts[:path])
       Dir.chdir(opts[:path])
     else
@@ -44,9 +42,7 @@ class Snapshot
   def create_file(name, content, path)
     Dir.chdir(path)
     unless File.exists? name
-      file = File.open(name, "w")
-      file.puts(content)
-      file.close
+      File.open(name, "w") { |f| f.write(content) }
     end
   end
 
