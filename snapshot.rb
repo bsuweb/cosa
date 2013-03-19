@@ -11,7 +11,11 @@ class Snapshot
             :domain => nil,
             :urls => nil
            }.merge(options)
-    Dir.chdir(Dir.pwd)
+    if File.exists?(opts[:path])
+      Dir.chdir(opts[:path])
+    else
+      FileUtils.mkdir_p opts[:path]
+    end
 
     # Get a list of all sites that contain the domain from the config file
     paths = opts[:urls].where(Sequel.like(:url, "%#{ opts[:domain][7..-1] }%"))
@@ -25,11 +29,8 @@ class Snapshot
     end
 
     paths_hash.each do |path|
-      # if path ends in "/"
-      $LOG.debug("#{ path[0] }")
-      # if path[0][-1, 1] == "/"
+      # if path contains no file extension
       if File.extname(path[0]).empty?
-      # unless path[1].nil? && File.extname(path[0]).empty?
         create_directory("#{ opts[:path] }#{ path[0] }")
         create_file("index.html", path[1], "#{ opts[:path] }#{path[0]}")
       else

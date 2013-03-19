@@ -96,7 +96,7 @@ class Database
     if opts[:age] then @urls.where{ accessed < Time.parse(opts[:age]) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }" } end
 
     if opts[:snapshot]
-      snap = Snapshot.new({:domain => @domain, :urls => @urls})
+      snap = Snapshot.new({:path => opts[:snapshot], :domain => @domain, :urls => @urls})
     end
 
     # Crawl opt set, start crawling
