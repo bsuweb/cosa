@@ -76,10 +76,7 @@ class Database
     old_links = []
     type_array = []
 
-    if url.include?('http') && !url.include?(domain)
-      # url is external, url = url
-      internal = false
-    elsif url[-1, 10] == "index.html"
+    if url[-1, 10] == "index.html"
       url = url[0..-10]
     end
 
@@ -143,7 +140,6 @@ class Database
           elsif item[:src] && item[:src][0..4] != 'data:'
             insert_links(item[:src], url, type, parsed_links, type_array)
           end
-
         end
 
         type_array.each { |array| array = remove_leading(array) }
@@ -154,7 +150,6 @@ class Database
         # item from the parsed_links array to the links table with the format
         # :from_url => current_url, :to_url => parsed_links_item, :type => type
         if links.where(:from_url => url).empty?
-
           parsed_links.each do |link|
             type = determine_type(link, type_array)
             insert_data_into(links, [url, link, type])
@@ -170,7 +165,6 @@ class Database
         # any links have been added or removed from the page.
         if item[:force] == 1 then new_links = parsed_links else new_links = parsed_links - old_links end
         deleted_links = old_links - parsed_links
-
         deleted_links.each { |link| links.where(:to_url => link).delete }
 
         new_links = remove_leading(new_links)
@@ -187,7 +181,6 @@ class Database
           # new_links to the queue with a blank pattern and a force value of 0.
           if item[:pattern] == ''
             if check_duplicates(link) == true then insert_data_into(queue, [link, '', 0, 0]) end
-
           # Elsif the pattern is not blank and 'link' matches the pattern, add
           # link to the queue with the same pattern and force value.
           elsif item[:pattern] != '' && link.include?(item[:pattern])
@@ -196,7 +189,7 @@ class Database
         end
       end
 
-      if internal == false
+      if url.include?('http') && !url.include?(domain)
         body = ''
       end
 
