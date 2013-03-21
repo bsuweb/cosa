@@ -6,8 +6,7 @@ class Snapshot
 
   # snap = Snapshot.new( {:path => path, :domain => domain, :urls => urls} )
   def initialize(options)
-    $LOG = Logger.new("logfile.log")
-    opts = {:path => Dir.pwd, :domain => nil, :urls => nil}.merge(options)
+    opts = {:path => Dir.pwd}.merge(options)
 
     if File.exists?(opts[:path])
       Dir.chdir(opts[:path])
