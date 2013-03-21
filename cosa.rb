@@ -314,8 +314,8 @@ class Database
     links_array.each do |link|
       if link[0] === '/'
         link.replace(link[1,link.length])
-      elsif link[0..2] === '../'
-        link.replace(link[3, link.length])
+      elsif link.include?("..")
+        link.replace(URI.join( domain, link[link.index("..")+2..-1] ).to_s)
       end
       link
     end
