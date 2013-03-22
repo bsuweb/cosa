@@ -19,7 +19,6 @@ class String
 end
 
 class Database
-  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :crawled
 
   def on_start
     to_crawl = queue.where(:in_use => 1)
@@ -132,13 +131,21 @@ class Database
           # type_array array.
           if item[:href]
             if !item[:href].nil? && !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
-              insert_links(item[:href], url, type, parsed_links, type_array)
+              begin
+                insert_links(item[:href], url, type, parsed_links, type_array)
+              rescue URI::InvalidURIError
+                insert_data_into(links, [url, item[:href], 'broken'])
+              end
             end
            # Else if the element contains an scr attribute, add it to the
           # parsed_links array. Also add that element and it's 'tag' to the
           # type_array array.
           elsif item[:src] && item[:src][0..4] != 'data:'
-            insert_links(item[:src], url, type, parsed_links, type_array)
+            begin
+              insert_links(item[:src], url, type, parsed_links, type_array)
+            rescue URI::InvalidURIError
+              insert_data_into(links, [url, item[:src], 'broken'])
+            end
           end
         end
 
