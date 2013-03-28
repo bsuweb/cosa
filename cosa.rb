@@ -80,8 +80,9 @@ class Database
     end
 
     response = Typhoeus::Request.get(url,
-                                    :timeout => 30,
+                                    :timeout_ms => 30000,
                                     :followlocation => true,
+                                    :maxredirs => 5,
                                     :headers => {
                                       'User-Agent' => "Cosa/0.2 ()"
                                     })
