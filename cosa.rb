@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: utf-8
 
 require 'nokogiri'
 require 'typhoeus'
@@ -272,7 +273,7 @@ class Database
   # type_array    - Array of links on the current page and their 'types'
   #
   def insert_links(item, url, type, parsed_links, type_array)
-    item = URI.join( url, URI.escape(item.gsub(/\s+\"|"/, '').strip, "[]()| ") ).to_s
+    item = URI.join( url, URI.escape(item.gsub(/\s+\"|"/, '').strip, "[]()|‰ ") ).to_s
     parsed_links << item
     type_array << [item, type]
   end
