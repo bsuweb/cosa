@@ -159,7 +159,7 @@ class Database
         # Get DB path, and check if it is a valid path
         puts "Enter the absolute path for the database directory (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ "
         db_path = $stdin.gets.chomp.downcase
-        if db_path == '' then db_path = "#{ Dir.getwd }/" end
+        if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
         if File.directory?("#{ db_path }")
           break
         else
