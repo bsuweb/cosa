@@ -34,6 +34,7 @@ class Database
     @links = db[:links]
     @queue = db[:queue]
     @domain = config['domain']
+    @exceptions = config['exceptions']
     @start_time = Time.now
 
     if config['shelf_life']
