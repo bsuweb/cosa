@@ -192,6 +192,7 @@ class Database
     elsif type == 'sqlite'
       config_file.puts("# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: sqlite://#{ db_path }#{ db_name }")
     end
+    config_file.puts("\n\n# Exceptions - directories Cosa should avoid when crawling\nexceptions:")
 
     config_file.close
     return config_name
