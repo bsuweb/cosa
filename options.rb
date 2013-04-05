@@ -158,7 +158,7 @@ class Database
       elsif type == 'sqlite'
         if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
         # Get DB path, and check if it is a valid path
-        puts "Enter the absolute path for the database directory (leave blank for default)\nExample: /Users/username/Documents/cosa/data/ "
+        puts "Enter the absolute path for the database directory (leave blank for default)\nExample: #{ Dir.getwd }/data/ "
         db_path = $stdin.gets.chomp.downcase
         if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
         if File.directory?("#{ db_path }")
