@@ -81,7 +81,7 @@ class Database
     end
 
     response = Typhoeus::Request.get(url,
-                                    :timeout => 30000,
+                                    :timeout_ms => 30000,
                                     :followlocation => true,
                                     :maxredirs => 5,
                                     :headers => {
@@ -225,13 +225,21 @@ class Database
   end
 
   def except_or_insert(item, link_type, parsed_links, type_array, url)
-    @exceptions.each do |dir|
-      unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
-        begin
-          insert_links(item, url, link_type, parsed_links, type_array)
-        rescue URI::InvalidURIError
-          insert_data_into(links, [url, item, 'broken'])
+    unless @exceptions.nil?
+      @exceptions.each do |dir|
+        unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
+          begin
+            insert_links(item, url, link_type, parsed_links, type_array)
+          rescue URI::InvalidURIError
+            insert_data_into(links, [url, item, 'broken'])
+          end
         end
+      end
+    else
+      begin
+          insert_links(item, url, link_type, parsed_links, type_array)
+      rescue URI::InvalidURIError
+        insert_data_into(links, [url, item, 'broken'])
       end
     end
   end
