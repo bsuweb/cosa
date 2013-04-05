@@ -81,7 +81,7 @@ class Database
     end
 
     response = Typhoeus::Request.get(url,
-                                    :timeout_ms => 30000,
+                                    :timeout => 30000,
                                     :followlocation => true,
                                     :maxredirs => 5,
                                     :headers => {
@@ -99,7 +99,7 @@ class Database
     end
 
     if content_type.include?(';')
-      content_type = content_type[0, content_type.index(';')]
+      content_type = content_type[0..content_type.index(';')-1]
     elsif content_type == {}
       content_type = ""
     end
@@ -134,20 +134,12 @@ class Database
           # type_array array.
           if item[:href]
             if !item[:href].nil? && !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
-              begin
-                insert_links(item[:href], url, type, parsed_links, type_array)
-              rescue URI::InvalidURIError
-                insert_data_into(links, [url, item[:href], 'broken'])
-              end
-            end
-           # Else if the element contains an scr attribute, add it to the
-          # parsed_links array. Also add that element and it's 'tag' to the
-          # type_array array.
-          elsif item[:src] && item[:src][0..4] != 'data:'
-            begin
-              insert_links(item[:src], url, type, parsed_links, type_array)
-            rescue URI::InvalidURIError
-              insert_data_into(links, [url, item[:src], 'broken'])
+              except_or_insert(URI.escape(item[:href].gsub(/\s+"|"/, '').strip, "[]()|% "), type, parsed_links, type_array, url)
+            # Else if the element contains an scr attribute, add it to the
+            # parsed_links array. Also add that element and it's 'tag' to the
+            # type_array array.
+            elsif item[:src] && item[:src][0..4] != 'data:'
+              except_or_insert(URI.escape(item[:src].gsub(/\s+"|"/, '').strip, "[]()|% "), type, parsed_links, type_array, url)
             end
           end
         end
@@ -232,6 +224,18 @@ class Database
 
   end
 
+  def except_or_insert(item, link_type, parsed_links, type_array, url)
+    @exceptions.each do |dir|
+      unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
+        begin
+          insert_links(item, url, link_type, parsed_links, type_array)
+        rescue URI::InvalidURIError
+          insert_data_into(links, [url, item, 'broken'])
+        end
+      end
+    end
+  end
+
   # Combines the array of given 'values' with an array of 'keys' based on the
   # table you wish to insert data to. The key and value arrays are combined
   # into a hash object and the data is inserted into the correct table.
@@ -273,7 +277,7 @@ class Database
   # type_array    - Array of links on the current page and their 'types'
   #
   def insert_links(item, url, type, parsed_links, type_array)
-    item = URI.join( url, URI.escape(item.gsub(/\s+\"|"/, '').strip, "[]()|‰ ") ).to_s
+    item = URI.join(url, item).to_s
     parsed_links << item
     type_array << [item, type]
   end
