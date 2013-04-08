@@ -227,12 +227,12 @@ class Database
   def except_or_insert(item, link_type, parsed_links, type_array, url)
     unless @exceptions.nil?
       @exceptions.each do |dir|
-        unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
-          begin
+        begin
+          unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
             insert_links(item, url, link_type, parsed_links, type_array)
-          rescue URI::InvalidURIError
-            insert_data_into(links, [url, item, 'broken'])
           end
+        rescue URI::InvalidURIError
+            insert_data_into(links, [url, item, 'broken'])
         end
       end
     else
@@ -360,6 +360,9 @@ while true
   if !crawler.queue.empty?
     crawler.crawl_queue
   else
+    unless @output == 'silent'
+      print "\n"
+    end
     break
   end
 end
