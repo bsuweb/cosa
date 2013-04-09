@@ -103,15 +103,15 @@ class Database
     # Crawl opt set, start crawling
     if opts[:crawl]
       if opts[:crawl].length == 1
-        unless opts[:crawl] == "res"
-          # 1 Argument, gets the url to add to the queue.
-          insert_data_into(@queue, [ opts[:crawl],'', 1, 0 ])
-        end
+        # 1 Argument, insert into queue
+        insert_data_into(@queue, [ opts[:crawl],'', 1, 0 ])
       elsif opts[:crawl].length == 2
         # 2 Arguments, gets the url to add to the queue and the pattern to use
         # when checking pages.
         pattern = URI.join( opts[:crawl][0], opts[:crawl][1] ).to_s
         insert_data_into(@queue, [ opts[:crawl][0], opts[:crawl][1], 1, 0 ])
+      else
+        # No Arguments. Resume the crawler.
       end
     else
       Process.exit
