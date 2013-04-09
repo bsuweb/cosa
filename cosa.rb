@@ -232,14 +232,18 @@ class Database
             insert_links(item, url, link_type, parsed_links, type_array)
           end
         rescue URI::InvalidURIError
-            insert_data_into(links, [url, item, 'broken'])
+          insert_data_into(links, [url, item, 'broken'])
+        rescue ArgumentError
+          insert_data_into(links, [url, "ILL-FORMED LINK", 'broken'])
         end
       end
     else
       begin
-          insert_links(item, url, link_type, parsed_links, type_array)
+        insert_links(item, url, link_type, parsed_links, type_array)
       rescue URI::InvalidURIError
         insert_data_into(links, [url, item, 'broken'])
+      rescue ArgumentError
+        insert_data_into(links, [url, "ILL-FORMED LINK", 'broken'])
       end
     end
   end
