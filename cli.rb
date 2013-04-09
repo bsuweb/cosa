@@ -2,6 +2,7 @@ require 'trollop'
 require './options'
 
 def cli
+  sub_commands = %w(crawl)
   opts = Trollop::options do
     version " Cosa 0.2"
     banner <<-EOS
@@ -9,10 +10,13 @@ def cli
     tools and reports.
 
     Usage:
-      ruby cosa.rb -w http://www.example.com [-options]
+      ruby cosa.rb crawl
+        - Resume crawling from the first item in the queue.
+
+      ruby cosa.rb crawl http://www.example.com [-options]
         - Cosa will start at this address, and crawl every page on the site.
 
-      ruby cosa.rb -w http://www.example.com/directory/ /directory/page/ [-options]
+      ruby cosa.rb crawl http://www.example.com/directory/ /directory/page/ [-options]
         - Cosa will start at 'http://www.example.com/directory/', and then
           only add links to the queue if they contain the pattern
           'http://www.example.com/directory/page'.
@@ -24,7 +28,7 @@ def cli
     opt :init, "Command-line tool for creating and saving a config file."
     opt :add, "Add a URL (or multiple URLs, separated by spaces) to the queue.", :type => :strings
     opt :config, "Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists", :type => :string
-    opt :crawl, "Start the crawler. Look above for examples of usage.", :type => :strings
+    # opt :crawl, "Start the crawler. Look above for examples of usage.", :type => :strings
     opt :broken, "List all URLs that contain broken links, and their broken links."
     opt :abandoned, "List all pages that are no longers linked to."
     #opt :invalid_html, "List pages with invalid html."
@@ -39,7 +43,23 @@ def cli
     opt :silent, "Silence all output.", :short => 'S'
     opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given full path.", :type => :string, :short => "-o"
     opt :verbose, "Verbose output.", :short => "-V"
+    stop_on sub_commands
   end
+
+  while !ARGV.empty?
+  cmd = ARGV.shift # get the subcommand
+  cmd_opts = case cmd
+    when "crawl" # parse crawl options
+      if ARGV.count() > 1
+        new_opts = {:crawl=>[ ARGV[0], ARGV[1] ]}
+      elsif ARGV.count() < 1
+        new_opts = {:crawl=>[true]}
+      else
+        new_opts = {:crawl=>[ARGV[0]]}
+      end
+    end
+  end
+  if new_opts then opts = opts.merge(new_opts) end
 
   # Make sure :age date is valid
   if opts[:age] then Trollop::die :age, "Date must be in the form of yyyy-mm-dd" unless opts[:age].to_s.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/) end
