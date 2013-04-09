@@ -23,10 +23,16 @@ class Database
 
     if opts[:init] then config = YAML::load(File.open(create_config)) end
 
-    if config['db_path']
-      @db = Sequel.connect(config['db_path'])
+    if File.exists?(config['db_path'])
+      if config['db_path']
+        @db = Sequel.connect(config['db_path'])
+      else
+        @db = Sequel.connect(:adapter => 'mysql', :user => config['user'], :socket => config['sock'], :database => config['name'], :password => config['pass'])
+      end
     else
-      @db = Sequel.connect(:adapter => 'mysql', :user => config['user'], :socket => config['sock'], :database => config['name'], :password => config['pass'])
+      puts 'test2'
+      create_db('sqlite', nil, nil, nil, "#{config['db_path']}")
+      @db = Sequel.connect(config['db_path'])
     end
     @crawled = 0
     @avg_response = 0
@@ -159,7 +165,7 @@ class Database
         if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
         # Get DB path, and check if it is a valid path
         puts "Enter the absolute path for the database directory (leave blank for default)\nExample: #{ Dir.getwd }/data/ "
-        db_path = $stdin.gets.chomp.downcase
+        db_path = "sqlite:///#{ $stdin.gets.chomp.downcase }"
         if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
         if File.directory?("#{ db_path }")
           break
@@ -203,9 +209,8 @@ class Database
     puts "creating db"
     if type == 'mysql'
       new_db = Sequel.connect(:adapter => 'mysql', :user => user, :socket => sock, :database => path, :password => pass)
-
     else
-      new_db = Sequel.connect("sqlite://#{ path }")
+      new_db = Sequel.connect("#{ path }")
     end
 
     new_db.create_table :queue do
