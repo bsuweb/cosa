@@ -34,15 +34,16 @@ If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutoria
 
 First, rename `sample_config.yaml` to `config.yaml` and modify it to meet your needs.
 
-You have two options when running Cosa.
+You have three options when running Cosa.
 
-        ruby cosa.rb -w http://www.example.com [-options]
+        ruby cosa.rb crawl
+Resume crawling from the first item in the queue.
 
-Cosa will start at this address and crawl every page on the site.
+      ruby cosa.rb crawl http://www.example.com [-options]
+Cosa will start at this address, and crawl every page on the site.
 
-        ruby cosa.rb -w http://www.example.com/directory/ /directory/page/ [-options]
-
-Cosa will start at 'http://www.example.com/directory/', and then only add links to the queue if they contain the pattern 'http://www.example.com/directory/page/'.
+      ruby cosa.rb crawl http://www.example.com/directory/ /directory/page/ [-options]
+Cosa will start at 'http://www.example.com/directory/', and then only add links to the queue if they contain the pattern 'http://www.example.com/directory/page'.
 
 Because Cosa stores the queue in the database, you can quit the program at any time and when you restart it will begin where it left off.
 
@@ -57,16 +58,18 @@ Cosa uses a simple database with the following three tables:
 ## Help
 
 ```
-Usage: ruby cosa.rb [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
-                    [-w starting_url] OR [-w starting_url pattern]
+Usage: ruby cosa.rb crawl OR crawl [starting_url] OR crawl [starting_url pattern]
+                    [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
                     [-a url_one url_two] [-c config_file]
                     [-g date] [-r seconds] [-t URL] [-f URL]
+
+Commands:
+crawl                   : Start the crawler. Look above for examples of usage.
 
 Options:
 --init, -i              : Command-line tool for creating and saving a config file.
 --add, -a <s+>          : Add a URL (or multiple URLs, separated by spaces) to the queue.
 --config, -c <s>        : Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists.
---crawl, -w  <s+>       : Start the crawler. Look above for examples of usage.
 --broken, -b            : List all URLs that contain broken links, and their broken links.
 --css, s                : List all CSS URLs that are linked to.
 --age, -g <s>           : List all URLs that are older than the given date.
