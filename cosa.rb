@@ -233,8 +233,9 @@ class Database
   def except_or_insert(item, link_type, parsed_links, type_array, url)
     unless @exceptions.nil?
       @exceptions.each do |dir|
+        regex = Regexp.new(dir)
         begin
-          unless (URI.join(domain, item).to_s).include?(URI.join(domain, dir).to_s)
+          unless URI.join(domain, item).to_s.match(regex)
             insert_links(item, url, link_type, parsed_links, type_array)
           end
         rescue URI::InvalidURIError
