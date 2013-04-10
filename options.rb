@@ -25,12 +25,11 @@ class Database
 
     if File.exists?(config['db_path'])
       if config['db_path']
-        @db = Sequel.connect(config['db_path'])
+        @db = Sequel.connect("sqlite://#{ config['db_path']}")
       else
         @db = Sequel.connect(:adapter => 'mysql', :user => config['user'], :socket => config['sock'], :database => config['name'], :password => config['pass'])
       end
     else
-      puts 'test2'
       create_db('sqlite', nil, nil, nil, "#{config['db_path']}")
       @db = Sequel.connect(config['db_path'])
     end
@@ -165,7 +164,7 @@ class Database
         if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
         # Get DB path, and check if it is a valid path
         puts "Enter the absolute path for the database directory (leave blank for default)\nExample: #{ Dir.getwd }/data/ "
-        db_path = "sqlite:///#{ $stdin.gets.chomp.downcase }"
+        db_path = "#{ $stdin.gets.chomp.downcase }"
         if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
         if File.directory?("#{ db_path }")
           break
@@ -196,7 +195,7 @@ class Database
     if type == 'mysql'
       config_file.puts("# mysql db name, username, password and socket path\nname: #{ db_name }\nuser: #{ user }\npass: #{ pass }\nsock: #{ sock }")
     elsif type == 'sqlite'
-      config_file.puts("# Ex) sqlite:///Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: sqlite://#{ db_path }#{ db_name }")
+      config_file.puts("# Ex) /Users/username/Documents/cosa/data/webcrawler.sqlite\ndb_path: #{ db_path }#{ db_name }")
     end
     config_file.puts("\n\n# Exceptions - directories Cosa should avoid when crawling\nexceptions:")
 
@@ -210,7 +209,7 @@ class Database
     if type == 'mysql'
       new_db = Sequel.connect(:adapter => 'mysql', :user => user, :socket => sock, :database => path, :password => pass)
     else
-      new_db = Sequel.connect("#{ path }")
+      new_db = Sequel.connect("sqlite://#{ path }")
     end
 
     new_db.create_table :queue do
