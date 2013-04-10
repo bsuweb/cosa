@@ -90,13 +90,19 @@ class Database
     url = response.effective_url
     url[0..4].downcase
     response_time = response.total_time.round(6)
-
-    content_type = response.headers_hash["Content-Type"]
-    if response.headers_hash["Content-Length"].to_s.numeric?
-      content_length = response.headers_hash["Content-Length"]
-    else
-      content_length = ""
+    begin
+      content_type = response.headers_hash["Content-Type"]
+      if response.headers_hash["Content-Length"].to_s.numeric?
+        content_length = response.headers_hash["Content-Length"]
+      else
+        content_length = ""
+      end
+    rescue NoMethodError
+      content_type = "NA"
+      content_length = "NA"
     end
+
+
 
     if content_type.include?(';')
       content_type = content_type[0..content_type.index(';')-1]
