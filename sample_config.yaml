@@ -9,6 +9,7 @@ shelf_life: 86400
 # Ex) db_path: sqlite:///Users/username/Documents/crawler/data/database.sqlite
 db_path: sqlite:///absolute/path/to/database.sqlite
 
-# Exceptions - directories Cosa should avoid when crawling
+# Exceptions - regex expression for paths that Cosa should ignore
+# Ex) - .+\/directory\/.+ will ignore every url that contains /directory/
 exceptions:
-  - /path/to/except/
+
