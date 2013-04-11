@@ -30,8 +30,11 @@ class Database
         @db = Sequel.connect(:adapter => 'mysql', :user => config['user'], :socket => config['sock'], :database => config['name'], :password => config['pass'])
       end
     else
+      puts "The database listed in your config file does not exist. Would you like to create it? (y/n)"
+      ans = $stdin.gets[0,1].chomp.downcase
+      unless ans == 'y' then Process.exit end
       create_db('sqlite', nil, nil, nil, "#{config['db_path']}")
-      @db = Sequel.connect(config['db_path'])
+      @db = Sequel.connect("sqlite://#{ config['db_path'] }")
     end
     @crawled = 0
     @avg_response = 0
