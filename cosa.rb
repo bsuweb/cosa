@@ -87,7 +87,9 @@ class Database
                                     :headers => {
                                       'User-Agent' => "Cosa/0.2 ()"
                                     })
-
+    url = response.effective_url
+    url[0..4].downcase
+    response_time = response.total_time.round(6)
     # If a rediect occurred, insert the original url into the urls and links table.
     # Prevents them from being recrawled the next time the crawler is run, even if
     # the shelf life hasn't "expired".
@@ -96,9 +98,7 @@ class Database
       insert_data_into(links, [new_url, url, "HTTP-Redirect"])
     end
 
-    url = response.effective_url
-    url[0..4].downcase
-    response_time = response.total_time.round(6)
+
     begin
       content_type = response.headers_hash["Content-Type"]
       if response.headers_hash["Content-Length"].to_s.numeric?
@@ -142,9 +142,9 @@ class Database
           end
 
           # If element contains an href attribute, and that is not set to '#' or
-          # 'mailto:', or http://, or contains a '@' symbol add that element to
-          # the parsed_links array. Also add that element and it's 'tag' to the
-          # type_array array.
+          # 'mailto:', or 'http://', or 'javascript:', or 'file:' or contains a
+          # '@' symbol add that element to the parsed_links array. Also add that
+          # element and it's 'tag' to the type_array array.
           if item[:href]
             if !item[:href].nil? && (
               !item[:href].include?('#') ) && (
