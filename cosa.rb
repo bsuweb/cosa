@@ -70,23 +70,32 @@ class Database
   def crawl_url(queue_id)
 
     item = queue[:id => queue_id]
-    url = item[:url]
+    new_url = item[:url]
     last_accessed = Time.now
     parsed_links = []
     old_links = []
     type_array = []
 
-    if url[-1, 10] == "index.html"
-      url = url[0..-10]
+    if new_url[-1, 10] == "index.html"
+      new_url = new_url[0..-10]
     end
 
-    response = Typhoeus::Request.get(url,
+    response = Typhoeus::Request.get(new_url,
                                     :timeout_ms => 30000,
                                     :followlocation => true,
                                     :maxredirs => 5,
                                     :headers => {
                                       'User-Agent' => "Cosa/0.2 ()"
                                     })
+
+    # If a rediect occurred, insert the original url into the urls and links table.
+    # Prevents them from being recrawled the next time the crawler is run, even if
+    # the shelf life hasn't "expired".
+    if response.redirect_count > 0
+      insert_data_into(urls, [new_url, last_accessed, '', 0, Typhoeus.get(new_url).code.to_s, '', 0, '', 0])
+      insert_data_into(links, [new_url, url, "HTTP-Redirect"])
+    end
+
     url = response.effective_url
     url[0..4].downcase
     response_time = response.total_time.round(6)
@@ -101,8 +110,6 @@ class Database
       content_type = "NA"
       content_length = "NA"
     end
-
-
 
     if content_type.include?(';')
       content_type = content_type[0..content_type.index(';')-1]
@@ -139,7 +146,14 @@ class Database
           # the parsed_links array. Also add that element and it's 'tag' to the
           # type_array array.
           if item[:href]
-            if !item[:href].nil? && !item[:href].include?('#') && !item[:href].include?('mailto:') && item[:href] != "http://" && !item[:href].include?('@')
+            if !item[:href].nil? && (
+              !item[:href].include?('#') ) && (
+              !item[:href].include?('mailto:') ) && (
+              !item[:href].include?("javascript:") ) && (
+              !item[:href].include?('@') ) && (
+              !item[:href].include?("file:") ) && (
+              item[:href] != "http://" )
+
               except_or_insert(URI.escape(item[:href].gsub(/\s+"|"/, '').strip, "[]()|% "), type, parsed_links, type_array, url)
             # Else if the element contains an scr attribute, add it to the
             # parsed_links array. Also add that element and it's 'tag' to the
