@@ -39,9 +39,12 @@ class Snapshot
   end
 
   def create_file(name, content, path)
-    Dir.chdir(path)
-    unless File.exists? name
-      File.open(name, "w") { |f| f.write(content) }
+    begin
+      Dir.chdir(path)
+      unless File.exists? name
+        File.open(name, "w") { |f| f.write(content) }
+      end
+    rescue Errno::ENOENT
     end
   end
 
