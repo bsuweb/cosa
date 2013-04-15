@@ -7,7 +7,7 @@ domain: www.yourdomain.com
 shelf_life: 86400
 
 # Ex) db_path: sqlite:///Users/username/Documents/crawler/data/database.sqlite
-db_path: sqlite:///absolute/path/to/database.sqlite
+db_path: /absolute/path/to/database.sqlite
 
 # Exceptions - regex expression for paths that Cosa should ignore
 # Ex) - .+\/directory\/.+ will ignore every url that contains /directory/
