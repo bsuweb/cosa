@@ -96,7 +96,7 @@ class Database
       puts "Abandoned links:"
       @urls.each do |link|
         unless @links[:to_url => link[:url]]
-          puts link
+          puts link[:url]
         end
       end
     end
