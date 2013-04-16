@@ -121,6 +121,9 @@ class Database
     body = response.body
     if status == 404
       valid = [0, 0]
+    elsif status == 0
+      url = new_url
+      valid = valid?(url, content_type)
     else
       valid = valid?(url, content_type)
       # valid = [1, 1]
