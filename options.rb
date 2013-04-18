@@ -172,7 +172,12 @@ class Database
         if File.directory?("#{ db_path }")
           break
         else
-          puts "Please enter a valid path"
+          begin
+            Dir.mkdir(db_path)
+            break
+          rescue SustemCallError
+            puts "Please enter a valid path"
+          end
         end
       else
         puts "Please enter either 'mysql' or 'sqlite'"
