@@ -1,7 +1,6 @@
 require 'sequel'
 require 'yaml'
 require 'uri'
-require 'trollop'
 require './snapshot'
 
 class Database
