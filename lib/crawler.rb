@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # encoding: utf-8
 
 require 'sequel'
@@ -73,8 +72,8 @@ class Cosa
 
     if valid[1] = 'html' && url.include?(domain)
       type = ''
-      parsed_links, old_links = [], []
-      links.where(:from_url => url).each { |link| old_links << link[:to_ur] }
+      parsed_links, old_links = {},{}
+      links.where(:from_url => url).each { |link| old_links[link[:to_ur]] = link[:type] }
       Nokogiri::HTML(resp.body).css('a', 'link', 'img', 'video', 'audio', 'script', 'object').each do |item|
         if item.name == "link"
             if item.attr('rel') == "stylesheet"
@@ -92,19 +91,37 @@ class Cosa
           except_or_insert(URI.escape(item[:src].gsub(/\s+"|"/, '').strip, "[]()|%{} "), type, url, parsed_links)
         end
       end
-      new_links = parsed_links - old_links
-      deleted_links = old_links - parsed_links
-      deleted_links.each { |link| links.where(:to_url => link).delete }
-      new_links.each do |link|
-        unless links.where(:from_url => url, :to_url => link)
-          insert_data_into(links, [url, link, type])
+
+      parsed_links.each_pair do |k,v|
+        if links.where(:from_url => k).empty?
+          insert_data_into(links, [url, k, v])
+        elsif links.where(:from_url => url, :to_url => k)
+          insert_data_into(links, [url, k, v])
         end
+
         if i[:pattern] == ''
-          if check_duplicates(link) == true then insert_data_into(queue, [link, '', 0, 0]) end
+          if check_duplicates(k) == true then insert_data_into(queue, [k, '', 0, 0]) end
         elsif
-          if check_duplicates(link) == true then insert_data_into(queue, [link, i[:pattern], i[:force], 0]) end
+          if check_duplicates(k) == true then insert_data_into(queue, [k, i[:pattern], i[:force], 0]) end
         end
       end
+      deleted_links = old_links.to_a - parsed_links.to_a
+      deleted_links.each { |link| links.where(:to_url => link).delete }
+
+      # new_links = parsed_links - old_links
+      # deleted_links = old_links - parsed_links
+      # deleted_links.each { |link| links.where(:to_url => link).delete }
+      # new_links.each do |link|
+      #   if links.where(:from_url => url).empty?
+      #     insert_data_into(links, [url, link, type])
+      #   elsif links.where(:from_url => url, :to_url => link)
+      #     insert_data_into(links, [url, link, type])
+      #   end
+      # if i[:pattern] == ''
+      #   if check_duplicates(link) == true then insert_data_into(queue, [link, '', 0, 0]) end
+      # elsif
+      #   if check_duplicates(link) == true then insert_data_into(queue, [link, i[:pattern], i[:force], 0]) end
+      # end
 
     else
       body=''
@@ -146,12 +163,12 @@ class Cosa
   def except_or_insert(item, type, url, parsed_links)
     item = URI.join(domain, item).to_s
     if @exceptions.nil?
-      parsed_links << item
+      parsed_links[item] = type
     else
       @exceptions.each do |reg|
         regex = Regexp.new(reg)
         unless item.match(regex)
-          parsed_links << item
+          parsed_links[item] = type
         end
       end
     end
