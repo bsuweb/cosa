@@ -108,21 +108,6 @@ class Cosa
       deleted_links = old_links.to_a - parsed_links.to_a
       deleted_links.each { |link| links.where(:to_url => link).delete }
 
-      # new_links = parsed_links - old_links
-      # deleted_links = old_links - parsed_links
-      # deleted_links.each { |link| links.where(:to_url => link).delete }
-      # new_links.each do |link|
-      #   if links.where(:from_url => url).empty?
-      #     insert_data_into(links, [url, link, type])
-      #   elsif links.where(:from_url => url, :to_url => link)
-      #     insert_data_into(links, [url, link, type])
-      #   end
-      # if i[:pattern] == ''
-      #   if check_duplicates(link) == true then insert_data_into(queue, [link, '', 0, 0]) end
-      # elsif
-      #   if check_duplicates(link) == true then insert_data_into(queue, [link, i[:pattern], i[:force], 0]) end
-      # end
-
     else
       body=''
     end
