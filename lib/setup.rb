@@ -25,6 +25,7 @@ class Cosa
     @queue = values["queue"]
     @domain = values["domain"]
     @SHELF = values["shelf"]
+    @exceptions = values["exceptions"]
 
     if opts[:clear_queue] then clear_queue(@queue) end
     if opts[:queue] then list_queue(@queue) end
@@ -96,8 +97,8 @@ class Cosa
     urls.where{ accessed < Time.parse(age) }.each { |x| puts "#{ x[:url] } | #{ x[:accessed] }"}
   end
 
-  def snapshot
-    puts 'snapshot'
+  def snapshot(snapshot)
+    snap = Snapshot.new({:path => snapshot, :domain => @domain, :urls => @urls})
   end
 
   def crawl(crawl, queue)
