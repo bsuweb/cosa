@@ -34,7 +34,7 @@ class Cosa
 
     resp = Typhoeus::Request.get(i[:url], :timeout_ms => 30000,
                                 :followlocation => true, :maxredirs => 5,
-                                :headers => { 'User-Agent' => "Cosa/0.2.1 ()" })
+                                :headers => { 'User-Agent' => "Cosa/0.3 ()" })
     url = resp.effective_url
     url[0..4].downcase
     body = resp.body
@@ -147,15 +147,16 @@ class Cosa
 
   def except_or_insert(item, type, url, parsed_links)
     item = URI.join(domain, item).to_s
-    if @exceptions.nil?
-      parsed_links[item] = type
-    else
+    unless @exceptions.nil?
       @exceptions.each do |reg|
         regex = Regexp.new(reg)
         unless item.match(regex)
           parsed_links[item] = type
+        else
         end
       end
+    else
+      parsed_links[item] = type
     end
   end
 
