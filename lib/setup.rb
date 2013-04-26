@@ -2,7 +2,8 @@ require 'sequel'
 require 'yaml'
 require 'uri'
 require './config'
-require './crawler.rb'
+require './crawler'
+require './snapshot'
 
 # Set defaults
 # Handle Command Line Options
@@ -38,7 +39,7 @@ class Cosa
     if opts[:broken] then list_broken(@url, @links) end
     if opts[:abandoned] then list_abandoned(@url, @links) end
     if opts[:age] then list_age(opts[:age], @url) end
-    if opts[:snapshot] then snapshot end
+    if opts[:snapshot] then snapshot(opts[:snapshot]) end
     if opts[:crawl] then crawl(opts[:crawl], @queue) else Process.exit end
 
     to_crawl = queue.where(:in_use => 1)
