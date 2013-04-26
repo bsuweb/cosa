@@ -40,7 +40,7 @@ class Cosa
     body = resp.body
     response_time = resp.total_time.round(6)
     if resp.redirect_count > 0
-      insert_data_into(urls, [ last_accessed, '', 0 , Typhoeus.get(i[:url]).code.to_s, '', 0, '', 0 ])
+      insert_data_into(urls, [ i[:url], last_accessed, '', 0 , Typhoeus.get(i[:url]).code.to_s, '', 0, '', 0 ])
       insert_data_into(links, [ i[:url], url, "HTTP-Redirect" ])
     end
 
@@ -93,9 +93,7 @@ class Cosa
       end
 
       parsed_links.each_pair do |k,v|
-        if links.where(:from_url => k).empty?
-          insert_data_into(links, [url, k, v])
-        elsif links.where(:from_url => url, :to_url => k)
+        unless links.where(:from_url => k, :to_url => v)
           insert_data_into(links, [url, k, v])
         end
 
@@ -106,8 +104,7 @@ class Cosa
         end
       end
       deleted_links = old_links.to_a - parsed_links.to_a
-      deleted_links.each { |link| links.where(:to_url => link).delete }
-
+      deleted_links.each { |link| links.where(:to_url => link[0]).delete }
     else
       body=''
     end
