@@ -1,5 +1,6 @@
 require 'trollop'
 require 'setup'
+
 class Cosa
   def cli
     sub_commands = %w(crawl)
@@ -10,13 +11,13 @@ class Cosa
       tools and reports.
 
       Usage:
-        ruby cosa.rb crawl
+        cosa crawl
           - Resume crawling from the first item in the queue.
 
-        ruby cosa.rb crawl http://www.example.com [-options]
+        cosa crawl http://www.example.com [-options]
           - Cosa will start at this address, and crawl every page on the site.
 
-        ruby cosa.rb crawl http://www.example.com/directory/ /directory/page/ [-options]
+        cosa crawl http://www.example.com/directory/ /directory/page/ [-options]
           - Cosa will start at 'http://www.example.com/directory/', and then
             only add links to the queue if they contain the pattern
             'http://www.example.com/directory/page'.
