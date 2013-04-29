@@ -143,17 +143,23 @@ class Cosa
   end
 
   def except_or_insert(item, type, url, parsed_links)
-    item = URI.join(domain, item).to_s
-    unless @exceptions.nil?
-      @exceptions.each do |reg|
-        regex = Regexp.new(reg)
-        unless item.match(regex)
-          parsed_links[item] = type
-        else
+    begin
+      item = URI.join(domain, item).to_s
+      unless @exceptions.nil?
+        @exceptions.each do |reg|
+          regex = Regexp.new(reg)
+          unless item.match(regex)
+            parsed_links[item] = type
+          else
+          end
         end
+      else
+        parsed_links[item] = type
       end
-    else
-      parsed_links[item] = type
+    rescue URI::InvalidURIError
+      insert_data_into(links, [url, item, 'broken'])
+    rescue ArgumentError
+      insert_data_into(links, [url, "ILL-FORMED LINK", 'broken'])
     end
   end
 
