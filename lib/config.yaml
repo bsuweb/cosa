@@ -1,15 +1,17 @@
 # Cosa config file
 
-domain: http://www.example.edu
+domain: http://www.ntcmn.edu
 
 # Amount of time between crawls on the same page
 # 86400 seconds by default (1 day)
 shelf_life: 86400
 
 # Ex) /Users/username/Documents/cosa/data/webcrawler.sqlite
-db_path: /Users/matt/Documents/cosa_re/lib/data/webcrawler.sqlite
+db_path: /Users/matt/Documents/cosa/lib/data/ntcmn.sqlite
 
 
 # Exceptions - directories Cosa should avoid when crawling
+# Takes a regex, that will be combined with the domain. For example:
+# .+\/directory\/.+ will look for matches of http://www.example.com/directory/something
 exceptions:
     - .+\/calendar\/.+

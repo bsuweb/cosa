@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'cosa'
+Cosa.new()

@@ -4,7 +4,7 @@ require 'sequel'
 require 'nokogiri'
 require 'typhoeus'
 require 'uri'
-require './setup'
+require 'setup'
 
 class Cosa
 

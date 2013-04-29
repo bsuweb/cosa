@@ -1,9 +1,9 @@
 require 'sequel'
 require 'yaml'
 require 'uri'
-require './config'
-require './crawler'
-require './snapshot'
+require 'config'
+require 'crawler'
+require 'snapshot'
 
 # Set defaults
 # Handle Command Line Options
@@ -11,7 +11,7 @@ class Cosa
   extend Configure
   attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :num_crawled
 
-  def initialize(opts)
+  def setup(opts)
     values = Cosa.config(opts[:config], opts[:init])
     @output = "silent" if opts[:silent]
     @output ||= "verbose" if opts[:verbose]
