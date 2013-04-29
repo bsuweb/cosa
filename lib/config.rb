@@ -152,7 +152,7 @@ module Configure
   end
 
   def create_db(type, user, pass, sock, path)
-    puts "creating db"
+    puts "Creating Database..."
     if type == 'mysql'
       new_db = Sequel.connect(:adapter => 'mysql', :user => user, :socket => sock, :database => path, :password => pass)
     else
