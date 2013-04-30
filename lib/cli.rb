@@ -5,7 +5,7 @@ class Cosa
   def cli
     sub_commands = %w(crawl)
     opts = Trollop::options do
-      version " Cosa 0.3"
+      version "Cosa #{ @VERSION }"
       banner <<-EOS
       Cosa is a simple web crawler that generates a database for use by other
       tools and reports.
@@ -31,8 +31,9 @@ class Cosa
       opt :config, "Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists", :type => :string
       opt :broken, "List all URLs that contain broken links, and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
+      opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string
       # opt :invalid_html, "List pages with invalid html."
-      opt :css, "List all CSS URLs that are linked to."
+      opt :list, "List all URLs of the given type.", :type => :string
       opt :age, "List all URLs that are older than the given date.", :type => :string
       opt :queue, "List the current queue."
       opt :clear_queue, "Empty the queue"

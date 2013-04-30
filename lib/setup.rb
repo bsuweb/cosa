@@ -9,7 +9,7 @@ require 'snapshot'
 # Handle Command Line Options
 class Cosa
   extend Configure
-  attr_accessor :opts, :db, :urls, :links, :queue, :SHELF, :domain, :start_time, :output, :num_crawled
+  attr_accessor :opts, :db, :urls, :links, :queue, :domain, :start_time, :output, :num_crawled, :SHELF, :VERSION
 
   def setup(opts)
     values = Cosa.config(opts[:config], opts[:init])
@@ -25,13 +25,14 @@ class Cosa
     @links = values["links"]
     @queue = values["queue"]
     @domain = values["domain"]
-    @SHELF = values["shelf"]
     @exceptions = values["exceptions"]
+    @SHELF = values["shelf"]
+    @VERSION = "0.3"
 
     if opts[:clear_queue] then clear_queue(@queue) end
     if opts[:queue] then list_queue(@queue) end
     if opts[:add] then add_to_queue(opts[:add], @queue) end
-    if opts[:css] then list_css(@links) end
+    if opts[:list] then list(@links, opts[:list]) end
     if opts[:to] then list_to(opts[:to], @links) end
     if opts[:from] then list_from(opts[:from], @links) end
     if opts[:response_time] then response_time(opts[:response_time], @url) end
@@ -40,6 +41,7 @@ class Cosa
     if opts[:abandoned] then list_abandoned(@url, @links) end
     if opts[:age] then list_age(opts[:age], @url) end
     if opts[:snapshot] then snapshot(opts[:snapshot]) end
+    if opts[:exception] then exception(opts[:config], opts[:exception], values) end
     if opts[:crawl] then crawl(opts[:crawl], @queue) else Process.exit end
 
     to_crawl = queue.where(:in_use => 1)
@@ -58,8 +60,8 @@ class Cosa
     items.each { |x| insert_data_into(queue, [x, '', 1, 0]) }
   end
 
-  def list_css(links)
-    links.where(:type => 'css').group(:to_url).order{max(1)}.each { |x| puts x[:to_url] }
+  def list(links, type)
+    links.where(:type => type).group(:to_url).order{max(1)}.each { |x| puts x[:to_url] }
   end
 
   def list_to(item, links)
@@ -100,6 +102,18 @@ class Cosa
 
   def snapshot(snapshot)
     snap = Snapshot.new({:path => snapshot, :domain => @domain, :urls => @urls})
+  end
+
+  def exception(config, exception, values)
+    if config.nil?
+      puts 'Enter the name of the config file you would like to add an exception to:'
+      inp = $stdin.gets.chomp
+      file = YAML::load(File.open(inp))
+    else
+      file = YAML::load(File.open(config))
+    end
+    file["exceptions"] << exception
+    File.open(Dir.pwd + '/' + inp, 'w+') {|f| f.write(file.to_yaml) }
   end
 
   def crawl(crawl, queue)
