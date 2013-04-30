@@ -29,20 +29,19 @@ Cosa relies on the following ruby gems.
 
 If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutorials/installing_nokogiri.html).
 
-
 ## Running Cosa
 
 First, rename `sample_config.yaml` to `config.yaml` and modify it to meet your needs.
 
 You have three options when running Cosa.
 
-        ruby cosa.rb crawl
+      cosa crawl
 Resume crawling from the first item in the queue.
 
-      ruby cosa.rb crawl http://www.example.com [-options]
+      cosa crawl http://www.example.com [-options]
 Cosa will start at this address, and crawl every page on the site.
 
-      ruby cosa.rb crawl http://www.example.com/directory/ /directory/page/ [-options]
+      cosa crawl http://www.example.com/directory/ /directory/page/ [-options]
 Cosa will start at 'http://www.example.com/directory/', and then only add links to the queue if they contain the pattern 'http://www.example.com/directory/page'.
 
 Because Cosa stores the queue in the database, you can quit the program at any time and when you restart it will begin where it left off.
@@ -58,7 +57,7 @@ Cosa uses a simple database with the following three tables:
 ## Help
 
 ```
-Usage: ruby cosa.rb crawl OR crawl [starting_url] OR crawl [starting_url pattern]
+Usage: cosa crawl OR crawl [starting_url] OR crawl [starting_url pattern]
                     [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
                     [-a url_one url_two] [-c config_file]
                     [-g date] [-r seconds] [-t URL] [-f URL]
