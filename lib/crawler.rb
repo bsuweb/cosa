@@ -34,7 +34,7 @@ class Cosa
 
     resp = Typhoeus::Request.get(i[:url], :timeout_ms => 30000,
                                 :followlocation => true, :maxredirs => 5,
-                                :headers => { 'User-Agent' => "Cosa/0.3 ()" })
+                                :headers => { 'User-Agent' => "Cosa/#{ @VERSION } ()" })
     url = resp.effective_url
     url[0..4].downcase
     body = resp.body
@@ -93,7 +93,7 @@ class Cosa
       end
 
       parsed_links.each_pair do |k,v|
-        unless links.where(:from_url => k, :to_url => v)
+        if links.where(:from_url => k, :to_url => v)
           insert_data_into(links, [url, k, v])
         end
 
@@ -145,6 +145,7 @@ class Cosa
   def except_or_insert(item, type, url, parsed_links)
     begin
       item = URI.join(domain, item).to_s
+      if File.extname(item) == "" && item[-1,1] != '/' then item << '/' end
       unless @exceptions.nil?
         @exceptions.each do |reg|
           regex = Regexp.new(reg)
