@@ -109,11 +109,14 @@ class Cosa
       puts 'Enter the name of the config file you would like to add an exception to:'
       inp = $stdin.gets.chomp
       file = YAML::load(File.open(inp))
+      file["exceptions"] << exception
+      File.open(Dir.pwd + '/' + inp, 'w+') {|f| f.write(file.to_yaml) }
     else
       file = YAML::load(File.open(config))
+      file["exceptions"] << exception
+      File.open(Dir.pwd + '/' + config, 'w+') {|f| f.write(file.to_yaml) }
     end
-    file["exceptions"] << exception
-    File.open(Dir.pwd + '/' + inp, 'w+') {|f| f.write(file.to_yaml) }
+
   end
 
   def crawl(crawl, queue)
