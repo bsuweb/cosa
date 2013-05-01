@@ -13,7 +13,6 @@ end
 # Load configuration file, configure Cosa
 module Configure
   def config(config, init)
-    # FIX THIS
     @config = get_config(config, init)
     if File.exists?('config.yaml')
       @config ||= YAML::load(File.open('config.yaml'))
