@@ -34,7 +34,7 @@ class Cosa
 
     resp = Typhoeus::Request.get(i[:url], :timeout_ms => 30000,
                                 :followlocation => true, :maxredirs => 5,
-                                :headers => { 'User-Agent' => "Cosa/#{ @VERSION } ()" })
+                                :headers => { 'User-Agent' => "Cosa/0.3 ()" })
     url = resp.effective_url
     url[0..4].downcase
     body = resp.body

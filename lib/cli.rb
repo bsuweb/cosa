@@ -5,7 +5,7 @@ class Cosa
   def cli
     sub_commands = %w(crawl)
     opts = Trollop::options do
-      version "Cosa #{ @VERSION }"
+      version "Cosa v0.3"
       banner <<-EOS
       Cosa is a simple web crawler that generates a database for use by other
       tools and reports.

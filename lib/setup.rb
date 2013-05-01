@@ -27,7 +27,6 @@ class Cosa
     @domain = values["domain"]
     @exceptions = values["exceptions"]
     @SHELF = values["shelf"]
-    @VERSION = "0.3"
 
     if opts[:clear_queue] then clear_queue(@queue) end
     if opts[:queue] then list_queue(@queue) end
