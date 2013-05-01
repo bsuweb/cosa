@@ -29,6 +29,11 @@ Cosa relies on the following ruby gems.
 
 If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutorials/installing_nokogiri.html).
 
+## Installing Cosa
+
+After downloading Cosa run `gem build cosa.gemspec` followed by `sudo gem install cosa-3.0.gem` in the directory 
+where Cosa is located.
+
 ## Running Cosa
 
 First, rename `sample_config.yaml` to `config.yaml` and modify it to meet your needs.
@@ -100,6 +105,16 @@ Cosa is released under the [MIT License](http://opensource.org/licenses/MIT).
 Copyright (C) 2012-2013 Bemidji State University
 
 ## Changelog
+
+[v0.3 (2013-05-01](https://github.com/bsuweb/cosa/)
+ * Base code completely rewritten
+ * Performance increases
+ * Numerous bug fixes
+ * Removed List CSS option
+ * Added List option
+ * Added Snapshot option 
+ * Added Exceptions
+ 
 
 [v0.2 (2013-02-13)](https://github.com/bsuweb/cosa/tree/v0.2)
  * Cosa now stores a response time for each url.
