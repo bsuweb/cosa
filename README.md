@@ -106,7 +106,7 @@ Copyright (C) 2012-2013 Bemidji State University
 
 ## Changelog
 
-[v0.3 (2013-05-01](https://github.com/bsuweb/cosa/)
+[v0.3 (2013-05-01](https://github.com/bsuweb/cosa/tree/v0.3)
  * Base code completely rewritten
  * Performance increases
  * Numerous bug fixes
