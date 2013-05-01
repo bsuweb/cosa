@@ -58,7 +58,7 @@ Cosa uses a simple database with the following three tables:
 
 ```
 Usage: cosa crawl OR crawl [starting_url] OR crawl [starting_url pattern]
-                    [-i] [-b] [-s] [-q] [-e] [-u] [-S/-V] [-v] [-h]
+                    [-i] [-b] [-e] [-l] [-q] [-e] [-u] [-S/-V] [-v] [-h]
                     [-a url_one url_two] [-c config_file]
                     [-g date] [-r seconds] [-t URL] [-f URL]
 
@@ -70,7 +70,8 @@ Options:
 --add, -a <s+>          : Add a URL (or multiple URLs, separated by spaces) to the queue.
 --config, -c <s>        : Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists.
 --broken, -b            : List all URLs that contain broken links, and their broken links.
---css, s                : List all CSS URLs that are linked to.
+--exception, -e <s>     : Add a regex exception to the config file given with the -c flag.
+--list, -l <s>          : List all URLs of the given type.
 --age, -g <s>           : List all URLs that are older than the given date.
 --queue, -q             : List all URLs in the queue.
 --clear-queue, -e       : Empty the queue.
