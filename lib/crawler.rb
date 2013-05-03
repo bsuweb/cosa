@@ -112,7 +112,7 @@ class Cosa
     rec = urls.where(:url => url)
     print_out(queue_id, url, last_accessed, content_type, resp.code, response_time, start_time)
     if urls[:url => url]
-      rec.update(:accessed => last_accessed, :response => body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''))
+      rec.update(:accessed => last_accessed, :content_length => content_length, :response => body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''))
     else
       insert_data_into(urls, [url, last_accessed, content_type, content_length, resp.code, body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''), response_time, valid[1], valid[0]])
     end
