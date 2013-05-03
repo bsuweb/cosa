@@ -31,14 +31,14 @@ class Cosa
       opt :config, "Run Cosa with a given config file. Otherwise, Cosa will use the default config if it exists", :type => :string
       opt :broken, "List all URLs that contain broken links, and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
-      opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string
+      opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string, :short => '-x'
       # opt :invalid_html, "List pages with invalid html."
       opt :list, "List all URLs of the given type.", :type => :string
       opt :age, "List all URLs that are older than the given date.", :type => :string
       opt :queue, "List the current queue."
-      opt :clear_queue, "Empty the queue"
+      opt :clear_queue, "Empty the queue", :short => '-e'
       opt :response_time, "List the URLs that took longer than <seconds> to respond.", :type => :float, :short => '-r'
-      opt :unresponsive, "List URLs that were not responsive."
+      opt :unresponsive, "List URLs that were not responsive.", :short => '-u'
       opt :to, "List URLs that link to the given URL.", :type => :string
       opt :from, "List URLs that the given URL links to.", :type => :string
       opt :silent, "Silence all output.", :short => 'S'
