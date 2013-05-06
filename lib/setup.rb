@@ -9,7 +9,7 @@ require 'snapshot'
 # Handle Command Line Options
 class Cosa
   extend Configure
-  attr_accessor :opts, :db, :urls, :links, :queue, :domain, :start_time, :output, :num_crawled, :SHELF, :VERSION
+  attr_accessor :opts, :db, :urls, :links, :queue, :domain, :start_time, :output, :num_crawled, :SHELF
 
   def setup(opts)
     values = Cosa.config(opts[:config], opts[:init])
@@ -40,7 +40,7 @@ class Cosa
     if opts[:abandoned] then list_abandoned(@url, @links) end
     if opts[:age] then list_age(opts[:age], @url) end
     if opts[:snapshot] then snapshot(opts[:snapshot]) end
-    if opts[:exception] then exception(opts[:config], opts[:exception], values) end
+    if opts[:exception] then exception(opts[:config], opts[:exception]) end
     if opts[:crawl] then crawl(opts[:crawl], @queue) else Process.exit end
 
     to_crawl = queue.where(:in_use => 1)
@@ -103,7 +103,7 @@ class Cosa
     snap = Snapshot.new({:path => snapshot, :domain => @domain, :urls => @urls})
   end
 
-  def exception(config, exception, values)
+  def exception(config, exception)
     if config.nil?
       puts 'Enter the name of the config file you would like to add an exception to:'
       inp = $stdin.gets.chomp
