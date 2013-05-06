@@ -34,7 +34,7 @@ class Cosa
 
     resp = Typhoeus::Request.get(i[:url], :timeout_ms => 30000,
                                 :followlocation => true, :maxredirs => 5,
-                                :headers => { 'User-Agent' => "Cosa/0.3 ()" })
+                                :headers => { 'User-Agent' => "Cosa/#{@@VERSION} ()" })
     url = resp.effective_url
     url[0..4].downcase
     body = resp.body
@@ -54,7 +54,7 @@ class Cosa
       if resp.headers_hash["Content-Length"].to_s.numeric?
         content_length = resp.headers_hash["Content-Length"]
       else
-        content_length = ""
+        content_length = body.length
       end
     rescue NoMethodError
       content_type = "NA"
