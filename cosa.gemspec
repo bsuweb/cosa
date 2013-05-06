@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name      = 'cosa'
-  s.version   = '0.3'
+  s.version   = '0.3.1'
   s.date      = '2013-04-29'
   s.summary   = "Cosa is a simple web crawler that generates a database for use by other tools and reports."
   s.platform    = Gem::Platform::RUBY
