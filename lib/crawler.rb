@@ -3,6 +3,7 @@
 require 'sequel'
 require 'nokogiri'
 require 'typhoeus'
+require 'fastimage'
 require 'uri'
 require 'setup'
 
@@ -65,12 +66,12 @@ class Cosa
       valid = [0,0]
     elsif resp.code == 0
       url = i[:url]
-      valid = [0, valid?(content_type)]
+      valid = [0, valid(content_type)]
     else
-      valid = [1, valid?(content_type)]
+      valid = [1, valid(content_type)]
     end
 
-    if valid[1] = 'html' && url.include?(domain)
+    if valid[1] == 'html' && url.include?(domain)
       type = ''
       parsed_links, old_links = {},{}
       links.where(:from_url => url).each { |link| old_links[link[:to_ur]] = link[:type] }
@@ -93,7 +94,8 @@ class Cosa
       end
 
       parsed_links.each_pair do |k,v|
-        if links.where(:from_url => k, :to_url => v)
+        unless links.where(:from_url => url, :to_url => k)
+        # if links.where(:from_url => k, :to_url => v)
           insert_data_into(links, [url, k, v])
         end
 
@@ -116,12 +118,26 @@ class Cosa
     else
       insert_data_into(urls, [url, last_accessed, content_type, content_length, resp.code, body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''), response_time, valid[1], valid[0]])
     end
+
+#wrong
+    t = links.where(:to_url => url).limit(1)
+    t.each { |x| t = x }
+    if t[:type] == 'img'
+      dimensions = FastImage.size(url)
+      page = urls.where(:url => url).limit(1)
+      page.each do |x|
+        insert_data_into(meta, [ x[:id], "dimension-x", dimensions[0] ])
+        insert_data_into(meta, [ x[:id], "dimension-y", dimensions[1] ])
+      end
+    end
+
   end
 
   def insert_data_into(table, values)
     queue_opts = [:url, :pattern, :force, :in_use]
     links_opts = [:from_url, :to_url, :type]
     urls_opts = [:url, :accessed, :content_type, :content_length, :status, :response, :response_time, :validation_type, :valid]
+    meta_opts = [:id, :key, :value]
     data_hash = {}
 
     # Checks to see which table is being accessed and then creates the hash to
@@ -135,6 +151,8 @@ class Cosa
       links_opts.each_with_index { |k,i| data_hash[k] = values[i] }
     elsif table == urls
       urls_opts.each_with_index { |k,i| data_hash[k] = values[i] }
+    elsif table == meta
+      meta_opts.each_with_index { |k,i| data_hash[k] = values[i] }
     end
 
     db.transaction do
@@ -179,12 +197,14 @@ class Cosa
     end
   end
 
-  def valid?(content_type)
+  def valid(content_type)
     content = content_type.to_s
     valid_array = [
                    {:html => "text/html"}, {:xml => "text/xml"},
                    {:css => "text/css"}, {:rss => "application/rss+xml"},
-                   {:rss => "application/rdf+xml"}, {:rss => "application/atom+xml"}
+                   {:rss => "application/rdf+xml"}, {:rss => "application/atom+xml"},
+                   {:image => "image/gif"}, {:image => "image/jpeg"}, {:image => "image/png"},
+                   {:image => "image/pjpeg"}, {:image => "image/svg+xml"}, {:image => "image/tiff"}
                   ]
     valid_hash = Hash.new { |h, k| h[k] = [] }
     valid_array.each do |entry|
@@ -196,8 +216,7 @@ class Cosa
     else
       type = nil
     end
-
-    return type.to_s
+    return type
   end
 
   def print_out(queue_id, url, accessed, type, status, response_time, start_time)

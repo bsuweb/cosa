@@ -45,6 +45,7 @@ module Configure
             "urls" => @db[:urls],
             "links" => @db[:links],
             "queue" => @db[:queue],
+            "meta" => @db[:meta],
             "domain" => @config['domain'],
             "exceptions" => @config ['exceptions'],
             "shelf" => shelf
@@ -166,6 +167,7 @@ module Configure
       Integer :in_use, :default => 0
     end
     new_db.create_table :urls do
+      primary_key :id
       String :url, :text=>true
       String :accessed
       String :content_type
@@ -180,6 +182,11 @@ module Configure
       String :from_url, :text=>true
       String :to_url, :text=>true
       String :type
+    end
+    new_db.create_table :meta do
+      Integer :id
+      String :key
+      Integer :value
     end
     new_db.disconnect
   end

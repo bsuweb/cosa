@@ -9,7 +9,7 @@ require 'snapshot'
 # Handle Command Line Options
 class Cosa
   extend Configure
-  attr_accessor :opts, :db, :urls, :links, :queue, :domain, :start_time, :output, :num_crawled, :SHELF
+  attr_accessor :opts, :db, :urls, :links, :queue, :meta, :domain, :start_time, :output, :num_crawled, :SHELF
 
   def setup(opts)
     values = Cosa.config(opts[:config], opts[:init])
@@ -24,6 +24,7 @@ class Cosa
     @urls = values["urls"]
     @links = values["links"]
     @queue = values["queue"]
+    @meta = values["meta"]
     @domain = values["domain"]
     @exceptions = values["exceptions"]
     @SHELF = values["shelf"]
