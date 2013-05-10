@@ -221,8 +221,10 @@ class Cosa
 
   def print_out(queue_id, url, accessed, type, status, response_time, start_time)
     if output == "default"
+      line_two = "Remaining: #{ queue.count } | Avg Req: #{ avg_response(response_time) }  | Total time: #{ (Time.now - start_time).round(2) } \r"
+      print ' ' * (line_two.length) + "\r"
       print "#{ queue_id }: #{ url } \n"
-      print "Remaining: #{ queue.count } | Avg Req: #{ avg_response(response_time) }  | Total time: #{ (Time.now - start_time).round(2) }\r"
+      print line_two
       $stdout.flush
     elsif output == "verbose"
       puts "QueueID: #{ queue_id }
