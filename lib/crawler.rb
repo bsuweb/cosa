@@ -94,8 +94,7 @@ class Cosa
       end
 
       parsed_links.each_pair do |k,v|
-        unless links.where(:from_url => url, :to_url => k)
-        # if links.where(:from_url => k, :to_url => v)
+        if links.where(:from_url => k, :to_url => v)
           insert_data_into(links, [url, k, v])
         end
 
