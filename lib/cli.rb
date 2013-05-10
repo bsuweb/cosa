@@ -32,6 +32,7 @@ class Cosa
       opt :broken, "List all URLs that contain broken links, and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
       opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string, :short => '-x'
+      opt :info, "Get information about the given url.", :type => :string, :short => '-I'
       # opt :invalid_html, "List pages with invalid html."
       opt :list, "List all URLs of the given type.", :type => :string
       opt :age, "List all URLs that are older than the given date.", :type => :string
@@ -40,7 +41,7 @@ class Cosa
       opt :response_time, "List the URLs that took longer than <seconds> to respond.", :type => :float, :short => '-r'
       opt :unresponsive, "List URLs that were not responsive.", :short => '-u'
       opt :to, "List URLs that link to the given URL.", :type => :string
-      opt :from, "List URLs that the given URL links to.", :type => :string
+      opt :from, "List URLs that the given URL links to.", :type => :string, :short => '-f'
       opt :silent, "Silence all output.", :short => 'S'
       opt :snapshot, "Export the entire site from cosa as an HTML snapshot to the given full path.", :type => :string, :short => "-o"
       opt :verbose, "Verbose output.", :short => "-V"
