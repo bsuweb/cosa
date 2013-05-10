@@ -66,7 +66,7 @@ Usage: cosa crawl OR crawl [starting_url] OR crawl [starting_url pattern]
                     [-i] [-n] [-b] [-u] [-q] [-e] [-S/-V] [-v] [-h]
                     [-a url_one url_two] [-c config_file]
                     [-l type] [-x exception] [-o /path/to/snapshot]
-                    [-g date] [-r seconds] [-t URL] [-f URL]
+                    [-g date] [-r seconds] [-t URL] [-f URL] [-I URL]
 
 Commands:
 crawl                   : Start the crawler. Look above for examples of usage.
@@ -78,6 +78,7 @@ Options:
 --broken, -b            : List all URLs that contain broken links, and their broken links.
 --abandoned, -n         : List all pages that are no longer linked to.
 --exception, -x <s>     : Add a regex exception to the config file given with the -c flag.
+--info, -I <s>          : Get information about the given url.
 --list, -l <s>          : List all URLs of the given type.
 --age, -g <s>           : List all URLs that are older than the given date.
 --queue, -q             : List all URLs in the queue.
