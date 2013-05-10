@@ -30,15 +30,15 @@ class Cosa
     @SHELF = values["shelf"]
 
     if opts[:clear_queue] then clear_queue() end
-    if opts[:queue] then list_queue() end
+    if opts[:queue] then list_queue end
     if opts[:add] then add_to_queue(opts[:add]) end
     if opts[:list] then list(opts[:list]) end
     if opts[:to] then list_to(opts[:to]) end
     if opts[:from] then list_from(opts[:from]) end
     if opts[:response_time] then response_time(opts[:response_time]) end
-    if opts[:unresponsive] then list_unresponsive() end
-    if opts[:broken] then list_broken() end
-    if opts[:abandoned] then list_abandoned() end
+    if opts[:unresponsive] then list_unresponsive end
+    if opts[:broken] then list_broken end
+    if opts[:abandoned] then list_abandoned end
     if opts[:age] then list_age(opts[:age]) end
     if opts[:snapshot] then snapshot(opts[:snapshot]) end
     if opts[:exception] then exception(opts[:config], opts[:exception]) end
@@ -49,11 +49,11 @@ class Cosa
     to_crawl.each { |item| queue.where(:id => item[:id]).update(:in_use => 0) }
   end
 
-  def clear_queue()
+  def clear_queue
     @queue.delete
   end
 
-  def list_queue()
+  def list_queue
     @queue.each { |x| puts x[:url] }
   end
 
@@ -77,18 +77,18 @@ class Cosa
     @urls.where{ response_time > resp_time }.each { |x| puts "#{ x[:url] } | #{ x[:response_time] }"}
   end
 
-  def list_unresponsive()
+  def list_unresponsive
     @urls.where{ status > 500 }.each { |x| puts "#{ x[:url] } => #{ x[:status] }"}
   end
 
-  def list_broken()
+  def list_broken
     @urls.where(:status => 404).each do |bad_link|
       puts "BAD LINK: #{ bad_link[:url] }\nLINKED TO BY\n"
       @links.where(:to_url => bad_link[:url]).each { |x| puts "#{ x[:from_url] }"}
     end
   end
 
-  def list_abandoned()
+  def list_abandoned
     puts "Abandoned Links:"
     @urls.each do |x|
       unless @links[:to_url => x[:url]]
