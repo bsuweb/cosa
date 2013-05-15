@@ -3,9 +3,10 @@
 require 'sequel'
 require 'nokogiri'
 require 'typhoeus'
-require 'fastimage'
+require 'RMagick'
 require 'uri'
 require 'setup'
+include Magick
 
 class Cosa
 
@@ -118,15 +119,15 @@ class Cosa
       insert_data_into(urls, [url, last_accessed, content_type, content_length, resp.code, body.gsub(/[^a-zA-Z0-9\s\$\^<>=[:punct:]-]/, ''), response_time, valid[1], valid[0]])
     end
 
-#wrong
     t = links.where(:to_url => url).limit(1)
     t.each { |x| t = x }
-    if t[:type] == 'img'
-      dimensions = FastImage.size(url)
+    if t[:type] == 'img' && (200..299).include?(resp.code)
+      pic = ImageList.new(url)
       page = urls.where(:url => url).limit(1)
       page.each do |x|
-        insert_data_into(meta, [ x[:id], "dimension-x", dimensions[0] ])
-        insert_data_into(meta, [ x[:id], "dimension-y", dimensions[1] ])
+        insert_data_into(meta, [ x[:id], "dimension-x", pic.columns ])
+        insert_data_into(meta, [ x[:id], "dimension-y", pic.rows ])
+        insert_data_into(meta, [ x[:id], "density", pic.density ])
       end
     end
 
@@ -168,7 +169,6 @@ class Cosa
           regex = Regexp.new(reg)
           unless item.match(regex)
             parsed_links[item] = type
-          else
           end
         end
       else
@@ -202,8 +202,6 @@ class Cosa
                    {:html => "text/html"}, {:xml => "text/xml"},
                    {:css => "text/css"}, {:rss => "application/rss+xml"},
                    {:rss => "application/rdf+xml"}, {:rss => "application/atom+xml"},
-                   {:image => "image/gif"}, {:image => "image/jpeg"}, {:image => "image/png"},
-                   {:image => "image/pjpeg"}, {:image => "image/svg+xml"}, {:image => "image/tiff"}
                   ]
     valid_hash = Hash.new { |h, k| h[k] = [] }
     valid_array.each do |entry|
