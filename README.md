@@ -19,19 +19,23 @@ Cosa relies on the following ruby gems.
 
         gem install sequel
 
-* [Nokogiri](http://nokogiri.org/), an HTML parser
-
-        gem install nokogiri
-
 * [Trollop](http://trollop.rubyforge.org/), a command line option parser.
 
         gem install trollop
+
+* [RMagic](http://rmagick.rubyforge.org/), an interface between Ruby and the ImageMagick and GraphicsMagick image processing libraries.
+
+        gem install rmagick
+
+* [Nokogiri](http://nokogiri.org/), an HTML parser
+
+        gem install nokogiri
 
 If you run into difficulty see [Installing Nokogiri](http://nokogiri.org/tutorials/installing_nokogiri.html).
 
 ## Installing Cosa
 
-After downloading Cosa run `gem build cosa.gemspec` followed by `sudo gem install cosa-3.0.gem` in the directory 
+After downloading Cosa run `gem build cosa.gemspec` followed by `sudo gem install cosa-0.3.1.gem` in the directory
 where Cosa is located.
 
 ## Running Cosa
@@ -116,9 +120,9 @@ Copyright (C) 2012-2013 Bemidji State University
  * Numerous bug fixes
  * Removed List CSS option
  * Added List option
- * Added Snapshot option 
+ * Added Snapshot option
  * Added Exceptions
- 
+
 
 [v0.2 (2013-02-13)](https://github.com/bsuweb/cosa/tree/v0.2)
  * Cosa now stores a response time for each url.
