@@ -133,7 +133,6 @@ class Cosa
     elsif crawl.length == 2
       pattern = URI.join( crawl[0], crawl[1]).to_s
       insert_data_into(@queue, [ crawl[0], pattern, 1, 0 ])
-    else
     end
   end
 
