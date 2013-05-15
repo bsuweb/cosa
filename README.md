@@ -26,6 +26,8 @@ Cosa relies on the following ruby gems.
 * [RMagic](http://rmagick.rubyforge.org/), an interface between Ruby and the ImageMagick and GraphicsMagick image processing libraries.
 
         gem install rmagick
+        
+RMagick requires the ImageMagick library, which can be downloaded [here](http://www.imagemagick.org/script/binary-releases.php)
 
 * [Nokogiri](http://nokogiri.org/), an HTML parser
 
