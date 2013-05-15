@@ -19,7 +19,7 @@ class Snapshot
     # to a hash as long as its status code is >= 200 and less than 400
     paths_hash = {}
     paths.each do |x|
-      if x[:status].to_i < 400 && x[:status].to_i >= 200
+      if (200..399).include?(x[:status].to_i)
         paths_hash[x[:url].gsub(opts[:domain], "")] = x[:response]
       end
     end
