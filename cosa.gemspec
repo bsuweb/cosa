@@ -35,4 +35,5 @@ Gem::Specification.new do |s|
   s.add_dependency "typhoeus", ">= 0.5.3"
   s.add_dependency "sequel", ">= 3.46.0"
   s.add_dependency "sqlite3", ">= 1.3.7"
+  s.add_dependency "rmagick", ">= 2.13.2"
 end
