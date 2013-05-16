@@ -13,6 +13,8 @@ class Cosa
       if !queue.empty?
         crawl_queue
       else
+        db.run("DELETE FROM queue")
+        db.run("DELETE FROM sqlite_sequence WHERE name='queue'")
         unless output == 'silent'
           print "\n"
         end
