@@ -101,7 +101,7 @@ class Cosa
 
         if i[:pattern] == ''
           if check_duplicates(k) == true then insert_data_into(queue, [k, '', 0, 0]) end
-        elsif
+        elsif i[:pattern] != '' && k.include?(i[:pattern])
           if check_duplicates(k) == true then insert_data_into(queue, [k, i[:pattern], i[:force], 0]) end
         end
       end
