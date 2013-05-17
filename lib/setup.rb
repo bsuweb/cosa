@@ -29,20 +29,20 @@ class Cosa
     @exceptions = values["exceptions"]
     @SHELF = values["shelf"]
 
-    if opts[:clear_queue] then clear_queue() end
-    if opts[:queue] then list_queue end
-    if opts[:add] then add_to_queue(opts[:add]) end
-    if opts[:list] then list(opts[:list]) end
-    if opts[:to] then list_to(opts[:to]) end
-    if opts[:from] then list_from(opts[:from]) end
-    if opts[:response_time] then response_time(opts[:response_time]) end
-    if opts[:unresponsive] then list_unresponsive end
-    if opts[:broken] then list_broken end
-    if opts[:abandoned] then list_abandoned end
-    if opts[:age] then list_age(opts[:age]) end
-    if opts[:snapshot] then snapshot(opts[:snapshot]) end
-    if opts[:exception] then exception(opts[:config], opts[:exception]) end
-    if opts[:info] then get_info(opts[:info]) end
+    clear_queue if opts[:clear_queue]
+    list_queue if opts[:queue]
+    add_to_queue(opts[:add]) if opts[:add]
+    list(opts[:list]) if opts[:list]
+    list_to(opts[:to]) if opts[:to]
+    list_from(opts[:from]) if opts[:from]
+    response_time(opts[:response_time]) if opts[:response_time]
+    list_unresponsive if opts[:unresponsive]
+    list_broken if opts[:broken]
+    list_abandonded if opts[:abandoned]
+    list_age(opts[:age]) if opts[:age]
+    snapshot(opts[:snapshot]) if opts[:snapshot]
+    exception(opts[:config], opts[:exception]) if opts[:exception]
+    get_info(opts[:info]) if opts[:info]
     if opts[:crawl] then crawl(opts[:crawl]) else Process.exit end
 
     to_crawl = queue.where(:in_use => 1)
