@@ -59,11 +59,8 @@ class Cosa
       elsif content_type == {}
         content_type = ""
       end
-      if resp.headers_hash["Content-Length"]
-        content_length = resp.headers_hash["Content-Length"]
-      else
-        content_length = body.length
-      end
+      content_length ||= resp.headers_hash["Content-Length"]
+      content_length ||= body.length
     rescue NoMethodError
       content_type = "NA"
       content_length = "NA"
