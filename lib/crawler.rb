@@ -235,8 +235,8 @@ class Cosa
     elsif output == "verbose"
       puts "QueueID: #{ queue_id }
       Current URL: #{ url }
-      Last Accessed: #{ last_accessed }
-      Content Type: #{ content_type }
+      Last Accessed: #{ accessed }
+      Content Type: #{ type }
       Status Code: #{ status }
       Page Reponse Time: #{ response_time }
       Total Time: #{ Time.now - start_time } \n"
