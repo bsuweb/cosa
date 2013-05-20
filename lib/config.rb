@@ -68,29 +68,24 @@ module Configure
   end
 
   def create_config
-    # Ask to create new config
     puts "No config file given, or exists. Would you like to create one? (y/n) "
     ans = $stdin.gets[0,1].chomp.downcase
     unless ans == 'y' then Process.exit end
 
-    # Enter the base domain
     puts "Enter the base domain to be crawled. (ex: http://www.example.com) "
     domain = $stdin.gets.chomp.downcase
     if !domain.include?('http://') then domain = "http://#{ domain }" end
 
     while true
-      # Get the shelf life, check to make sure it is an integer
       puts "Enter a shelf life(time between crawls) in hours. Default is 24 hours. "
       shelf = $stdin.gets.chomp
       shelf = "24" if shelf.empty?
       if shelf.numeric? then break else puts "Please enter an integer." end
     end
 
-    # Ask for database type
     puts "What type of database would you like to use?\nmysql or sqlite? "
     type = $stdin.gets.chomp.downcase
 
-    # Ask for database name
     puts "Enter the name of your database: "
     db_name = $stdin.gets.chomp
 
@@ -105,7 +100,6 @@ module Configure
         break
       elsif type == 'sqlite'
         if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
-        # Get DB path, and check if it is a valid path
         puts "Enter the absolute path for the database directory (leave blank for default)\nExample: #{ Dir.getwd }/data/ "
         db_path = "#{ $stdin.gets.chomp.downcase }"
         if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
@@ -124,12 +118,10 @@ module Configure
       end
     end
 
-    # Enter the new config file name
     puts "Enter the name of your config file:\nExample: my_conf.yaml "
     config_name = $stdin.gets.chomp
     if config_name[-5,5] != ".yaml" then config_name = "#{ config_name }.yaml" end
 
-    # Call create_db
     if type == "mysql"
       create_db(type, user, pass, sock, db_name)
     elsif type == "sqlite"
