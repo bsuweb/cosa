@@ -61,9 +61,10 @@ Because Cosa stores the queue in the database, you can quit the program at any t
 
 Cosa uses a simple database with the following three tables:
 
-* `urls` – each URL linked to from the site. Contains: `url`, `date_accessed`, `content_type`, `content_length`, `status`, `response` (the entire HTTP response body), `validation_type`, and `valid`
-* `links` – stores the relationship between URL's. Once the crawl is complete, you can query this table to determine all URL's a given URL links to, and all URL's that link to a given URL.
-* `queue` working list of URL's that need to be crawled.
+* `urls` – Each URL linked to from the site. Contains: `url`, `date_accessed`, `content_type`, `content_length`, `status`, `response` (the entire HTTP response body), `validation_type`, and `valid`
+* `links` – Stores the relationship between URLs. Once the crawl is complete, you can query this table to determine all URL's a given URL links to, and all URL's that link to a given URL.
+* `queue` -  Working list of URLs that need to be crawled.
+* `meta` - List of IDs, that correspond to URLs in the urls table. Contains details about those links.
 
 ## Help
 
