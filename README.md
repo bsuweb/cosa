@@ -84,7 +84,7 @@ Options:
 --broken, -b            : List all URLs that contain broken links, and their broken links.
 --abandoned, -n         : List all pages that are no longer linked to.
 --exception, -x <s>     : Add a regex exception to the config file given with the -c flag.
---info, -I <s>          : Get information about the given url.
+--info, -I <s+>         : Get information about the given url(s).
 --list, -l <s>          : List all URLs of the given type.
 --age, -g <s>           : List all URLs that are older than the given date.
 --queue, -q             : List all URLs in the queue.
