@@ -16,7 +16,7 @@ class Snapshot
     # Get a list of all sites that contain the domain from the config file
     paths = opts[:urls].where(Sequel.like(:url, "%#{ opts[:domain][7..-1] }%"))
     # Remove the domain from each url, add add each new url and its response
-    # to a hash as long as its status code is >= 200 and less than 400
+    # to a hash as long as its status code is in the range 200..399.
     paths_hash = {}
     paths.each do |x|
       if (200..399).include?(x[:status].to_i)

@@ -31,16 +31,22 @@ class Cosa
   end
 
   def crawl_url(queue_id)
+    # Get url from queue.
     i = queue[:id => queue_id]
     last_accessed = Time.now
 
     resp = Typhoeus::Request.get(i[:url], :timeout_ms => 30000,
                                 :followlocation => true, :maxredirs => 5,
                                 :headers => { 'User-Agent' => "Cosa/#{@@VERSION} ()" })
+
+    # Get the effective url from Typhoeus, and convert the protocol to lowercase.
     url = resp.effective_url
     url[0..4].downcase
+
     body = resp.body
     response_time = resp.total_time.round(6)
+
+    # If there was a redirection, insert the original url into the urls and links tables.
     if resp.redirect_count > 0
       insert_data_into(urls, [ i[:url], last_accessed, '', 0 , Typhoeus.get(i[:url]).code.to_s, '', 0, '', 0 ])
       insert_data_into(links, [ i[:url], url, "HTTP-Redirect" ])
@@ -53,7 +59,7 @@ class Cosa
       elsif content_type == {}
         content_type = ""
       end
-      if resp.headers_hash["Content-Length"].to_s.numeric?
+      if resp.headers_hash["Content-Length"]
         content_length = resp.headers_hash["Content-Length"]
       else
         content_length = body.length
@@ -162,8 +168,11 @@ class Cosa
 
   def except_or_insert(item, type, url, parsed_links)
     begin
+      # Combine the domain from the config file, and the passed item to form a URL.
       item = URI.join(domain, item).to_s
+      # If item doesn't end with an extension and there is no trailing '/', add a '/' to the end
       if File.extname(item) == "" && item[-1,1] != '/' then item << '/' end
+      # See if item matches any of the exceptions in the config file.
       unless @exceptions.nil?
         @exceptions.each do |reg|
           regex = Regexp.new(reg)
