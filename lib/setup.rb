@@ -120,10 +120,13 @@ class Cosa
   end
 
   def get_info(info)
-    url = @urls.where(:url => info).limit(1)
-    puts info
-    url.each do |x|
-      @meta.where(:id => x[:id]).each { |y| puts "#{ y[:key] }: #{ y[:value] }" }
+    puts "----------"
+    data = []
+    info.each { |x| data << @urls.where(:url => x).limit(1) }
+    data.each do |y|
+      item = y[:id]
+      puts "URL: #{ item[:url] }"
+      @meta.where(:id => item[:id]).each { |z| puts "#{ z[:key] }: #{ z[:value] }" }
     end
   end
 
