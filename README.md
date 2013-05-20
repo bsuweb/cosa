@@ -69,11 +69,11 @@ Cosa uses a simple database with the following three tables:
 ## Help
 
 ```
-Usage: cosa crawl OR crawl [starting_url] OR crawl [starting_url pattern]
-                    [-i] [-n] [-b] [-u] [-q] [-e] [-S/-V] [-v] [-h]
-                    [-a url_one url_two] [-c config_file]
-                    [-l type] [-x exception] [-o /path/to/snapshot]
-                    [-g date] [-r seconds] [-t URL] [-f URL] [-I URL]
+Usage: cosa [options] crawl OR crawl [starting_url] OR crawl [starting_url pattern]
+            [-i] [-n] [-b] [-u] [-q] [-e] [-S/-V] [-v] [-h]
+            [-a url_one url_two] [-c config_file]
+            [-l type] [-x exception] [-o /path/to/snapshot]
+            [-g date] [-r seconds] [-t URL] [-f URL] [-I URL]
 
 Commands:
 crawl                   : Start the crawler. Look above for examples of usage.
