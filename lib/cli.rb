@@ -32,7 +32,7 @@ class Cosa
       opt :broken, "List all URLs that contain broken links, and their broken links."
       opt :abandoned, "List all pages that are no longers linked to."
       opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string, :short => '-x'
-      opt :info, "Get information about the given url.", :type => :strings, :short => '-I'
+      opt :info, "Get information about the given URL(s).", :type => :strings, :short => '-I'
       # opt :invalid_html, "List pages with invalid html."
       opt :list, "List all URLs of the given type.", :type => :string
       opt :age, "List all URLs that are older than the given date.", :type => :string
