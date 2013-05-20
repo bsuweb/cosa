@@ -239,7 +239,8 @@ class Cosa
       Content Type: #{ type }
       Status Code: #{ status }
       Page Reponse Time: #{ response_time }
-      Total Time: #{ Time.now - start_time } \n"
+      Total Time: #{ Time.now - start_time }
+      Remaining: #{ queue.count }\n"
     end
   end
 
