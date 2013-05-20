@@ -56,9 +56,8 @@ class Cosa
       content_type = resp.headers_hash["Content-Type"]
       if content_type.include?(';')
         content_type = content_type[0..content_type.index(';')-1]
-      elsif content_type == {}
-        content_type = ""
       end
+      content_type ||= ""
       content_length ||= resp.headers_hash["Content-Length"]
       content_length ||= body.length
     rescue NoMethodError
