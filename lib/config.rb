@@ -10,7 +10,6 @@ class String
   end
 end
 
-# Load configuration file, configure Cosa
 module Configure
   def config(config, init)
     @config = get_config(config, init)
@@ -125,7 +124,6 @@ module Configure
       create_db(type, nil, nil, nil, "#{ db_path }#{ db_name }")
     end
 
-    # Create Config file
     config_file = File.open(cname, 'w')
     config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf.to_i * 3600 }\n\n")
 

@@ -33,7 +33,6 @@ class Cosa
       opt :abandoned, "List all pages that are no longers linked to."
       opt :exception, "Add a regex exception to the config file given with the -c flag.", :type => :string, :short => '-x'
       opt :info, "Get information about the given URL(s).", :type => :strings, :short => '-I'
-      # opt :invalid_html, "List pages with invalid html."
       opt :list, "List all URLs of the given type.", :type => :string
       opt :age, "List all URLs that are older than the given date.", :type => :string
       opt :queue, "List the current queue."
@@ -49,9 +48,9 @@ class Cosa
     end
 
     while !ARGV.empty?
-    cmd = ARGV.shift # get the subcommand
+    cmd = ARGV.shift
     cmd_opts = case cmd
-      when "crawl" # parse crawl options
+      when "crawl"
         if ARGV.count() > 1
           new_opts = {:crawl=>[ ARGV[0], ARGV[1] ]}
         elsif ARGV.count() < 1
@@ -62,15 +61,8 @@ class Cosa
       end
     end
     if new_opts then opts = opts.merge(new_opts) end
-
-    # Make sure :age date is valid
     if opts[:age] then Trollop::die :age, "Date must be in the form of yyyy-mm-dd" unless opts[:age].to_s.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/) end
-
-    # Make sure the given config file ends in .yaml
-    # May change to check if the given name when appended with .yaml is valid
     if opts[:config] then Trollop::die :config, "Config file must end in .yaml" unless opts[:config].to_s.match(/.yaml$/) end
-
-
     return opts
   end
 end

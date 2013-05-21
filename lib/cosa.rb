@@ -8,7 +8,6 @@ class Cosa
   def initialize
     @@VERSION = "0.3.1"
     setup(cli)
-    # Check the next item in the queue as long as the queue is not empty
     while true
       if !queue.empty?
         crawl_queue
