@@ -124,12 +124,16 @@ class Cosa
     t = links.where(:to_url => url).limit(1)
     t.each { |x| t = x }
     if t[:type] == 'img' && (200..299).include?(resp.code)
-      pic = ImageList.new(url)
-      page = urls.where(:url => url).limit(1)
-      page.each do |x|
-        insert_data_into(meta, [ x[:id], "dimension-x", pic.columns ])
-        insert_data_into(meta, [ x[:id], "dimension-y", pic.rows ])
-        insert_data_into(meta, [ x[:id], "density", pic.density ])
+      begin
+        pic = ImageList.new(url)
+        page = urls.where(:url => url).limit(1)
+        page.each do |x|
+          insert_data_into(meta, [ x[:id], "dimension-x", pic.columns ])
+          insert_data_into(meta, [ x[:id], "dimension-y", pic.rows ])
+          insert_data_into(meta, [ x[:id], "density", pic.density ])
+        end
+      rescue Magick::ImageMagickError
+        # Something is wrong with the image. Don't add to meta.
       end
     end
 
@@ -171,8 +175,7 @@ class Cosa
       # See if item matches any of the exceptions in the config file.
       unless @exceptions.nil?
         @exceptions.each do |reg|
-          regex = Regexp.new(reg)
-          unless item.match(regex)
+          unless item.match(Regexp.new(reg))
             parsed_links[item] = type
           end
         end
