@@ -14,12 +14,6 @@ end
 module Configure
   def config(config, init)
     @config = get_config(config, init)
-    if File.exists?('config.yaml')
-      @config ||= YAML::load(File.open('config.yaml'))
-    else
-      @config ||= YAML::load(File.open(create_config))
-    end
-
     if @config['db_path']
       if File.exists?(@config['db_path'])
         @db = Sequel.connect("sqlite://#{ @config['db_path']}")
@@ -62,8 +56,10 @@ module Configure
       end
     elsif init
       return YAML::load(File.open(create_config))
+    elsif File.exists?('config.yaml')
+      return YAML::load(File.open('config.yaml'))
     else
-      return nil
+      return YAML::load(File.open(create_config))
     end
   end
 
