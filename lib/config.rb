@@ -79,13 +79,14 @@ module Configure
       if shelf.numeric? then break else puts "Please enter an integer." end
     end
 
-    puts "What type of database would you like to use?\nmysql or sqlite? "
-    type = $stdin.gets.chomp.downcase
-
-    puts "Enter the name of your database: "
-    db_name = $stdin.gets.chomp
-
+    puts "What type of database would you like to use?\nmysql or sqlite? Default is sqlite. "
     while true
+      type = $stdin.gets.chomp.downcase
+      type = 'sqlite' if type.empty?
+
+      puts "Enter the name of your database: "
+      db_name = $stdin.gets.chomp
+
       if type == 'mysql'
         puts "Username: "
         user = $stdin.gets.chomp
@@ -105,18 +106,18 @@ module Configure
           begin
             Dir.mkdir(db_path)
             break
-          rescue SustemCallError
+          rescue SystemCallError
             puts "Please enter a valid path"
           end
         end
       else
-        puts "Please enter either 'mysql' or 'sqlite'"
+        puts "Please enter either 'mysql' or 'sqlite' or leave blank"
       end
     end
 
     puts "Enter the name of your config file:\nExample: my_conf.yaml "
-    config_name = $stdin.gets.chomp
-    if config_name[-5,5] != ".yaml" then config_name = "#{ config_name }.yaml" end
+    cname = $stdin.gets.chomp
+    if File.extname(cname) != '.yaml' then cname = "#{cname.chomp(File.extname(cname))}.yaml" end
 
     if type == "mysql"
       create_db(type, user, pass, sock, db_name)
@@ -125,7 +126,7 @@ module Configure
     end
 
     # Create Config file
-    config_file = File.open(config_name, 'w')
+    config_file = File.open(cname, 'w')
     config_file.puts("# Cosa config file\n\ndomain: #{ domain }\n\n# Amount of time between crawls on the same page\n# 86400 seconds by default (1 day)\nshelf_life: #{ shelf.to_i * 3600 }\n\n")
 
     if type == 'mysql'
@@ -136,7 +137,7 @@ module Configure
     config_file.puts("\n\n# Exceptions - directories Cosa should avoid when crawling\nexceptions:")
 
     config_file.close
-    return config_name
+    return cname
   end
 
   def create_db(type, user, pass, sock, path)
@@ -147,36 +148,40 @@ module Configure
       new_db = Sequel.connect("sqlite://#{ path }")
     end
 
-    new_db.create_table :queue do
-      primary_key :id
-      String :url
-      String :pattern
-      Integer :force
-      Integer :in_use, :default => 0
+    begin
+      new_db.create_table :queue do
+        primary_key :id
+        String :url
+        String :pattern
+        Integer :force
+        Integer :in_use, :default => 0
+      end
+      new_db.create_table :urls do
+        primary_key :id
+        String :url, :text=>true
+        String :accessed
+        String :content_type
+        Integer :content_length
+        String :status
+        String :response, :text=>true
+        Float :response_time
+        String :validation_type
+        Integer :valid
+      end
+      new_db.create_table :links do
+        String :from_url, :text=>true
+        String :to_url, :text=>true
+        String :type
+      end
+      new_db.create_table :meta do
+        Integer :id
+        String :key
+        Integer :value
+      end
+      new_db.disconnect
+    rescue Sequel::DatabaseError
+      puts 'This database already exists. Please try again with a different database name.'
     end
-    new_db.create_table :urls do
-      primary_key :id
-      String :url, :text=>true
-      String :accessed
-      String :content_type
-      Integer :content_length
-      String :status
-      String :response, :text=>true
-      Float :response_time
-      String :validation_type
-      Integer :valid
-    end
-    new_db.create_table :links do
-      String :from_url, :text=>true
-      String :to_url, :text=>true
-      String :type
-    end
-    new_db.create_table :meta do
-      Integer :id
-      String :key
-      Integer :value
-    end
-    new_db.disconnect
   end
 
 end
