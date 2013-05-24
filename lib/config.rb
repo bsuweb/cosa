@@ -95,7 +95,7 @@ module Configure
         sock = $stdin.gets.chomp
         break
       elsif type == 'sqlite'
-        if db_name[-7,7] != ".sqlite" then db_name = "#{ db_name }.sqlite" end
+        if File.extname(db_name) != '.sqlite' then db_name = "#{db_name.chomp(File.extname(db_name))}.sqlite" end
         puts "Enter the absolute path for the database directory (leave blank for default)\nExample: #{ Dir.getwd }/data/ "
         db_path = "#{ $stdin.gets.chomp.downcase }"
         if db_path == '' then db_path = "#{ Dir.getwd }/data/" end
