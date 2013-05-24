@@ -26,7 +26,6 @@ class Cosa
     elsif urls[:url => row[:url]] && Time.now - Time.parse(urls.where(:url => row[:url]).get(:accessed)) > @SHELF
       crawl_url(row[:id])
     end
-    # Remove this item from the queue
     queue.where(:id => row[:id]).delete
   end
 
@@ -48,14 +47,16 @@ class Cosa
 
     # If there was a redirection, insert the original url into the urls and links tables.
     if resp.redirect_count > 0
-      insert_data_into(urls, [ i[:url], last_accessed, '', 0 , Typhoeus.get(i[:url]).code.to_s, '', 0, '', 0 ])
+      insert_data_into(urls, [i[:url], last_accessed, '', 0, Typhoeus.get(i[:url]).code.to_s, '', 0, '', 0 ])
       insert_data_into(links, [ i[:url], url, "HTTP-Redirect" ])
     end
+
+    if urls[:url => url] && Time.now - Time.parse(urls.where(:url=>url).get(:accessed)) < @SHELF then return end
 
     begin
       content_type = resp.headers_hash["Content-Type"]
       if content_type.include?(';')
-        content_type = content_type[0..content_type.index(';')-1]
+        content_type = content_type.split(';',2)[0]
       end
       content_type ||= ""
       content_length ||= resp.headers_hash["Content-Length"]
@@ -190,7 +191,7 @@ class Cosa
   end
 
   def check_duplicates(link)
-    if queue[:url => link] || link == domain + '/'
+    if queue[:url => link] || link == domain || link == domain + '/'
       false
     else
       dataset = urls.where(:url => link).limit(1)
