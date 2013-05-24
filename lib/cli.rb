@@ -54,7 +54,7 @@ class Cosa
         if ARGV.count() > 1
           new_opts = {:crawl=>[ ARGV[0], ARGV[1] ]}
         elsif ARGV.count() < 1
-          new_opts = {:crawl=>[true]}
+          new_opts = {:crawl=>"resume"}
         else
           new_opts = {:crawl=>[ARGV[0]]}
         end

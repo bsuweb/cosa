@@ -131,7 +131,9 @@ class Cosa
   end
 
   def crawl(crawl)
-    if crawl.length == 1
+    if crawl == "resume"
+      # Do nothing, if the queue is not empty crawling will resume.
+    elsif crawl.length == 1
       insert_data_into(@queue, [ crawl, '', 1, 0 ])
     elsif crawl.length == 2
       pattern = URI.join( crawl[0], crawl[1]).to_s
